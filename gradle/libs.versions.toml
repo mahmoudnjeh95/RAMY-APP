@@ -9,6 +9,7 @@ firebase       = "1.13.0"
 serialization  = "1.6.3"
 datetime       = "0.6.0"
 napier         = "2.7.1"
+googleServices = "4.4.1"
 
 [libraries]
 kotlin-test                  = { module = "org.jetbrains.kotlin:kotlin-test",                          version.ref = "kotlin"        }
@@ -36,5 +37,6 @@ androidApplication  = { id = "com.android.application",               version.re
 androidLibrary      = { id = "com.android.library",                   version.ref = "agp"     }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform",    version.ref = "kotlin"  }
 jetbrainsCompose    = { id = "org.jetbrains.compose",                 version.ref = "compose" }
-compose-compiler    = { id = "org.jetbrains.kotlin.plugin.compose",   version.ref = "kotlin"  }
-kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler    = { id = "org.jetbrains.kotlin.plugin.compose",   version.ref = "kotlin"        }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin"    }
+googleServices      = { id = "com.google.gms.google-services",            version.ref = "googleServices" }
