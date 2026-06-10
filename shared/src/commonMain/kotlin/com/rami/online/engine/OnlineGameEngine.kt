@@ -72,14 +72,16 @@ class OnlineGameEngine(
 
     private fun initLocalEngine(room: GameRoom) {
         val slots = room.players.values.toList()
-        innerEngine = GameEngine(
-            mode = room.mode,
-            playerNames = slots.map { it.username },
-            aiIndices = slots.mapIndexedNotNull { i, s -> if (s.isAi) i else null }.toSet(),
-            scoreLimit = room.scoreLimit
+        val engine = GameEngine()
+        engine.startGame(
+            playerNames  = slots.map { it.username },
+            mode         = room.mode,
+            scoreLimit   = room.scoreLimit,
+            aiIndices    = slots.mapIndexedNotNull { i, s -> if (s.isAi) i else null }.toSet()
         )
+        innerEngine = engine
         val mySlotIndex = slots.indexOfFirst { it.uid == localUid }
-        if (mySlotIndex == innerEngine!!.state.value.currentPlayerIndex) {
+        if (mySlotIndex == engine.state.value.currentPlayerIndex) {
             timerEngine.startFor(localUid)
         }
     }
@@ -107,15 +109,17 @@ class OnlineGameEngine(
         advanceTurn()
     }
 
-    fun layDownFormation(cards: List<Card>) {
+    fun layDownFormation(formations: List<List<Card>>) {
         if (!isMyTurn) return
-        innerEngine?.layDown(cards)
+        innerEngine?.layDown(formations)
         pushState()
     }
 
     fun addToFormation(card: Card, formationIndex: Int) {
         if (!isMyTurn) return
-        innerEngine?.addCardToFormation(card, formationIndex)
+        val formationId = innerEngine?.state?.value?.tableFormations
+            ?.getOrNull(formationIndex)?.id ?: return
+        innerEngine?.addCardToFormation(card, formationId)
         pushState()
     }
 
@@ -135,7 +139,6 @@ class OnlineGameEngine(
         val strikes = roomService.recordStrike(roomId, uid)
         if (strikes >= 3) {
             roomService.kickPlayer(roomId, uid)
-            innerEngine?.eliminatePlayer(uid)
             _kickedPlayers.emit(uid)
         }
         timerEngine.acknowledgeTimeout()
@@ -146,6 +149,7 @@ class OnlineGameEngine(
     private fun advanceTurn() {
         val state = innerEngine?.state?.value ?: return
         val nextPlayerSlot = room.value?.players?.values
+            ?.toList()
             ?.getOrNull(state.currentPlayerIndex)
         val nextUid = nextPlayerSlot?.uid ?: return
         timerEngine.startFor(nextUid)
