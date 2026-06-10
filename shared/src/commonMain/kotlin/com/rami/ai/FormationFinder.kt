@@ -216,7 +216,29 @@ object FormationFinder {
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private fun candidate(cards: List<Card>, type: FormationType, mode: GameMode) =
-        CandidateFormation(cards, type, cards.sumOf { it.pointValue(mode) })
+        CandidateFormation(cards, type, formationNazoulValue(cards, type, mode))
+
+    // Joker counts as the value of the card it replaces, not 50
+    private fun formationNazoulValue(cards: List<Card>, type: FormationType, mode: GameMode): Int {
+        val jokerCount = cards.count { it.isJoker() }
+        if (jokerCount == 0) return cards.sumOf { it.pointValue(mode) }
+        return when (type) {
+            FormationType.SET -> {
+                // All regular cards share the same rank → Joker = same value
+                val rankValue = cards.filterIsInstance<Card.Regular>()
+                    .firstOrNull()?.pointValue(mode) ?: 10
+                cards.size * rankValue
+            }
+            FormationType.SEQUENCE -> {
+                // Joker fills a gap; use average of regular cards as approximation
+                val regulars = cards.filterIsInstance<Card.Regular>()
+                if (regulars.isEmpty()) return cards.size * 10
+                val regularTotal = regulars.sumOf { it.pointValue(mode) }
+                val avgValue = regularTotal / regulars.size
+                regularTotal + jokerCount * avgValue
+            }
+        }
+    }
 }
 
 // ── Extension: k-combinations of a list ──────────────────────────────────────

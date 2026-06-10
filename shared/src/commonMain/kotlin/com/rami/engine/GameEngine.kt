@@ -71,6 +71,7 @@ class GameEngine {
             )
         }
 
+        // First player has 15 cards and skips the draw phase on their first turn
         _state.value = GameState(
             mode               = mode,
             players            = players,
@@ -78,7 +79,7 @@ class GameEngine {
             discardPile        = emptyList(),
             tableFormations    = emptyList(),
             currentPlayerIndex = 0,
-            turnPhase          = TurnPhase.DRAW,
+            turnPhase          = TurnPhase.ACTION,
             gamePhase          = GamePhase.IN_ROUND,
             scoreLimit         = scoreLimit,
             roundNumber        = 1,
@@ -339,25 +340,23 @@ class GameEngine {
         val s   = _state.value
         val deck = Deck(s.mode)
 
-        // Reset per-round fields; keep scores & joker banks
-        val resetPlayers = s.players.mapIndexed { i, p ->
+        // Lowest score starts next round; that player gets 15 cards
+        val startIdx = s.players.indexOfMinScore()
+        val roundPlayers = s.players.mapIndexed { i, p ->
             p.copy(
-                hand        = deck.deal(if (i == 0) 15 else 14),
+                hand        = deck.deal(if (i == startIdx) 15 else 14),
                 hasLaidDown = false,
                 nazoulValue = 0
             )
         }
 
-        // Lowest score starts next round (GDD §1.1)
-        val startIdx = resetPlayers.indexOfMinScore()
-
         _state.value = s.copy(
-            players            = resetPlayers,
+            players            = roundPlayers,
             deck               = deck.toList(),
             discardPile        = emptyList(),
             tableFormations    = emptyList(),
             currentPlayerIndex = startIdx,
-            turnPhase          = TurnPhase.DRAW,
+            turnPhase          = TurnPhase.ACTION,
             gamePhase          = GamePhase.IN_ROUND,
             roundNumber        = s.roundNumber + 1,
             lastNazoulValue    = 0,
