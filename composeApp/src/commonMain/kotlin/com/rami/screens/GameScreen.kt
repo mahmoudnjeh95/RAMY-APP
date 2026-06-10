@@ -413,7 +413,7 @@ private fun ActionBar(
             // Context hint
             if (isActPhase && selectedCards.isEmpty() && localPlayer.hasLaidDown) {
                 Text(
-                    "اختار ورقة للرمي\أو اضغط تشكيلة",
+                    "اختار ورقة للرمي  •  اضغط تشكيلة",
                     color = RamiColors.TextLight.copy(alpha = 0.4f),
                     fontSize = 9.sp, textAlign = TextAlign.End
                 )
