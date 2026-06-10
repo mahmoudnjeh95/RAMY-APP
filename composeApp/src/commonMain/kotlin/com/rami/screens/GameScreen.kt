@@ -478,21 +478,11 @@ private fun PlayerHandArea(
 
         Spacer(Modifier.height(4.dp))
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy((-10).dp),
-            contentPadding        = PaddingValues(horizontal = 8.dp)
-        ) {
-            itemsIndexed(sortedHand, key = { _, c -> c.id }) { idx, card ->
-                val isSelected = card.id in selectedIds
-                DealAnimatedCard(
-                    card     = card,
-                    selected = isSelected,
-                    delayMs  = idx * 55,  // cascade deal animation
-                    onClick  = { if (isMyTurn) onToggle(card.id) },
-                    modifier = Modifier.selectionLift(isSelected)
-                )
-            }
-        }
+        FanHandView(
+            cards       = sortedHand,
+            selectedIds = if (isMyTurn) selectedIds else emptySet(),
+            onToggle    = { id -> if (isMyTurn) onToggle(id) }
+        )
 
         // Selection summary
         if (selectedIds.isNotEmpty()) {

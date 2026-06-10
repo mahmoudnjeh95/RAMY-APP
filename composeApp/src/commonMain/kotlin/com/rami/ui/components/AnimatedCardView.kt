@@ -12,12 +12,6 @@ import com.rami.model.Card
 
 // ─── Deal animation ───────────────────────────────────────────────────────────
 
-/**
- * Wraps [CardView] with an entrance animation played once when [visible] becomes true.
- * Used for dealing cards at round start.
- *
- * @param delayMs  stagger delay in milliseconds (pass index * 60 for cascade effect)
- */
 @Composable
 fun DealAnimatedCard(
     card: Card,
@@ -38,9 +32,14 @@ fun DealAnimatedCard(
         label         = "card_alpha"
     )
     val offsetY by animateDpAsState(
-        targetValue   = if (appeared) 0.dp else 24.dp,
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        targetValue   = if (appeared) 0.dp else 30.dp,
+        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
         label         = "card_offset"
+    )
+    val scale by animateFloatAsState(
+        targetValue   = if (appeared) 1f else 0.85f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label         = "card_scale"
     )
 
     CardView(
@@ -50,16 +49,12 @@ fun DealAnimatedCard(
         modifier = modifier
             .offset(y = offsetY)
             .alpha(alpha)
+            .scale(scale)
     )
 }
 
 // ─── Discard animation ────────────────────────────────────────────────────────
 
-/**
- * Wraps [CardView] with an exit animation when the card is discarded.
- * Drive [visible] to false to trigger the animation; the card is removed from
- * state after the animation completes.
- */
 @Composable
 fun DiscardAnimatedCard(
     card: Card,
@@ -68,10 +63,11 @@ fun DiscardAnimatedCard(
 ) {
     AnimatedVisibility(
         visible = visible,
+        enter   = scaleIn(initialScale = 0.7f) + fadeIn(),
         exit    = slideOutHorizontally(
             targetOffsetX = { it },
-            animationSpec = tween(250)
-        ) + fadeOut(animationSpec = tween(200))
+            animationSpec = tween(220)
+        ) + fadeOut(animationSpec = tween(180))
     ) {
         CardView(card = card, modifier = modifier)
     }
@@ -79,14 +75,10 @@ fun DiscardAnimatedCard(
 
 // ─── Selection lift animation ─────────────────────────────────────────────────
 
-/**
- * Returns the animated Y offset modifier for a card selection lift.
- * Drop this on any [CardView] to get smooth up/down animation on select/deselect.
- */
 @Composable
 fun Modifier.selectionLift(selected: Boolean): Modifier {
     val lift by animateDpAsState(
-        targetValue   = if (selected) (-12).dp else 0.dp,
+        targetValue   = if (selected) (-14).dp else 0.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness    = Spring.StiffnessMedium
@@ -94,9 +86,12 @@ fun Modifier.selectionLift(selected: Boolean): Modifier {
         label = "lift"
     )
     val scale by animateFloatAsState(
-        targetValue   = if (selected) 1.05f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label         = "scale"
+        targetValue   = if (selected) 1.06f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness    = Spring.StiffnessMedium
+        ),
+        label = "scale"
     )
     return this
         .offset(y = lift)
@@ -105,15 +100,12 @@ fun Modifier.selectionLift(selected: Boolean): Modifier {
 
 // ─── AI "thinking" pulse ──────────────────────────────────────────────────────
 
-/**
- * Pulsing alpha animation shown on the opponent's hand area while the AI is thinking.
- */
 @Composable
 fun aiThinkingAlpha(): Float {
     val alpha by rememberInfiniteTransition(label = "ai_think").animateFloat(
-        initialValue   = 0.4f,
-        targetValue    = 1f,
-        animationSpec  = infiniteRepeatable(
+        initialValue  = 0.4f,
+        targetValue   = 1f,
+        animationSpec = infiniteRepeatable(
             animation  = tween(700, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
