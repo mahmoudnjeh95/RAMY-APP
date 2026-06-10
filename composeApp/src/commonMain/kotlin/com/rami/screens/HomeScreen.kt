@@ -51,15 +51,22 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
 
                 // ── Mode buttons ───────────────────────────────────────────────
                 ModeButton(
+                    emoji   = "🌐",
+                    arabic  = "العب أونلاين",
+                    english = "Play Online  •  Real Players",
+                    onClick = { onNavigate(Screen.Auth) },
+                    highlight = true
+                )
+                ModeButton(
                     emoji     = "🎴",
-                    arabic    = "عادي",
-                    english   = "Normal Mode  •  51 pts min",
+                    arabic    = "عادي ضد الروبوت",
+                    english   = "vs AI  •  Normal  •  51 pts min",
                     onClick   = { onNavigate(Screen.Lobby(GameMode.NORMAL)) }
                 )
                 ModeButton(
                     emoji     = "⭐",
-                    arabic    = "تفضيل",
-                    english   = "Tafdhil Mode  •  71 pts min",
+                    arabic    = "تفضيل ضد الروبوت",
+                    english   = "vs AI  •  Tafdhil  •  71 pts min",
                     onClick   = { onNavigate(Screen.Lobby(GameMode.TAFDHIL)) }
                 )
 
@@ -82,19 +89,19 @@ private fun ModeButton(
     emoji: String,
     arabic: String,
     english: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    highlight: Boolean = false
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(76.dp),
+        modifier = Modifier.fillMaxWidth().height(76.dp),
         shape  = RoundedCornerShape(18.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = RamiColors.Gold,
-            contentColor   = RamiColors.DarkGreen
+            containerColor = if (highlight) RamiColors.Gold else RamiColors.Gold.copy(alpha = 0.15f),
+            contentColor   = if (highlight) RamiColors.DarkGreen else RamiColors.TextLight
         ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
+        border = if (!highlight) androidx.compose.foundation.BorderStroke(1.dp, RamiColors.Gold.copy(alpha = 0.4f)) else null,
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = if (highlight) 6.dp else 2.dp)
     ) {
         Row(
             verticalAlignment    = Alignment.CenterVertically,
