@@ -18,3 +18,7 @@ Thumbs.db
 
 # Nested repo copy
 RAMY-APP/
+
+# Firebase — contains API keys, never commit
+google-services.json
+GoogleService-Info.plist
