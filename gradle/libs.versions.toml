@@ -1,8 +1,9 @@
 [versions]
-agp            = "8.13.2"
-kotlin         = "2.0.0"
-compose        = "1.6.10"
-coroutines     = "1.8.0"
+agp             = "8.13.2"
+kotlin          = "2.0.0"
+compose         = "1.6.10"
+coroutines      = "1.8.0"
+activityCompose = "1.9.3"
 androidxTest   = "1.5.0"
 junitAndroid   = "1.1.5"
 firebase       = "1.13.0"
@@ -18,6 +19,7 @@ kotlinx-coroutines-android   = { module = "org.jetbrains.kotlinx:kotlinx-corouti
 kotlinx-coroutines-test      = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test",             version.ref = "coroutines"    }
 kotlinx-serialization-json   = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json",          version.ref = "serialization" }
 kotlinx-datetime             = { module = "org.jetbrains.kotlinx:kotlinx-datetime",                    version.ref = "datetime"      }
+androidx-activity-compose    = { module = "androidx.activity:activity-compose",                   version.ref = "activityCompose" }
 androidx-test-core           = { module = "androidx.test:core",                                         version.ref = "androidxTest"  }
 androidx-test-runner         = { module = "androidx.test:runner",                                       version.ref = "androidxTest"  }
 androidx-test-junit          = { module = "androidx.test.ext:junit",                                    version = "1.1.5"             }
