@@ -129,11 +129,23 @@ fun LobbyScreen(
                         FilterChip(
                             selected = aiDifficulty == diff,
                             onClick  = { aiDifficulty = diff },
-                            label    = { Text(diff.displayAr, fontWeight = FontWeight.Bold) },
+                            label    = {
+                                Text(
+                                    "${diff.displayAr}  ${diffEmoji(diff)}",
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
                             colors   = filterChipColors()
                         )
                     }
                 }
+                // Description of selected difficulty
+                Text(
+                    text     = diffDescription(aiDifficulty),
+                    color    = RamiColors.TextLight.copy(alpha = 0.55f),
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
             }
 
             Spacer(Modifier.weight(1f))
@@ -174,6 +186,18 @@ private fun filterChipColors() = FilterChipDefaults.filterChipColors(
     selectedLabelColor     = RamiColors.DarkGreen,
     labelColor             = RamiColors.TextLight
 )
+
+private fun diffEmoji(diff: AiDifficulty) = when (diff) {
+    AiDifficulty.EASY   -> "🟢"
+    AiDifficulty.MEDIUM -> "🟡"
+    AiDifficulty.HARD   -> "🔴"
+}
+
+private fun diffDescription(diff: AiDifficulty) = when (diff) {
+    AiDifficulty.EASY   -> "يسحب دائماً من الكومة ويرمي أعلى ورقة — Easy: always draws blind, discards highest card"
+    AiDifficulty.MEDIUM -> "يقيّم المرمى ويختار الرمي بذكاء — Medium: evaluates discard pile, smart discards"
+    AiDifficulty.HARD   -> "يسرق الجوكر ويتجنب إفادة الخصم — Hard: steals Jokers, avoids helping opponents"
+}
 
 @Composable
 private fun textFieldColors() = OutlinedTextFieldDefaults.colors(

@@ -16,4 +16,5 @@ sealed class Screen {
     data class  OnlineGame(val roomId: String)   : Screen()
     data object Game  : Screen()
     data object Score : Screen()
+    data object Rules : Screen()
 }

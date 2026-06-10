@@ -144,5 +144,7 @@ fun App(
             },
             onMainMenu   = { screen = Screen.Home }
         )
+
+        is Screen.Rules -> RulesScreen(onBack = { screen = Screen.Home })
     }
 }
