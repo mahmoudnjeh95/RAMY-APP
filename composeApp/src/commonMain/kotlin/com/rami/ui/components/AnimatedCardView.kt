@@ -113,3 +113,31 @@ fun aiThinkingAlpha(): Float {
     )
     return alpha
 }
+
+// ─── Card flip (back → face) — used when drawing from deck ────────────────────
+
+@Composable
+fun FlipInCard(
+    card: Card,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    onClick: (() -> Unit)? = null
+) {
+    var done by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(60)
+        done = true
+    }
+    val rotY by animateFloatAsState(
+        targetValue   = if (done) 0f else 180f,
+        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        label         = "flipY"
+    )
+    CardView(
+        card     = card,
+        faceDown = rotY > 90f,
+        selected = selected && rotY <= 90f,
+        onClick  = onClick,
+        modifier = modifier.graphicsLayer { rotationY = rotY }
+    )
+}
