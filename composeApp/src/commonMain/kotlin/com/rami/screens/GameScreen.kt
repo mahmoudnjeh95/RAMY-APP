@@ -7,9 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -83,12 +82,6 @@ fun GameScreen(
 
     // Turn timer (seconds remaining)
     var timerSeconds by remember { mutableStateOf(30) }
-
-    // Pinch-to-zoom on own formations
-    var formationZoom by remember { mutableStateOf(1f) }
-    val formationTransform = rememberTransformableState { zoomChange, _, _ ->
-        formationZoom = (formationZoom * zoomChange).coerceIn(0.4f, 2.8f)
-    }
 
     // Card flip — track newest drawn card
     var newestCardId by remember { mutableStateOf<String?>(null) }
@@ -225,7 +218,7 @@ fun GameScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.30f)
+                            .weight(0.22f)
                             .background(RamiColors.DarkGreen.copy(alpha = 0.7f))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -249,7 +242,7 @@ fun GameScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.32f)
+                            .weight(0.28f)
                     ) {
                     Row(
                         modifier = Modifier
@@ -313,52 +306,39 @@ fun GameScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(0.38f)
+                            .weight(0.50f)
                             .background(RamiColors.DarkGreen.copy(alpha = 0.85f))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        // My formations — pinch-to-zoom, double-tap to reset
+                        // My formations — horizontally scrollable
                         if (myFormations.isNotEmpty()) {
-                            Box(
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(80.dp)
-                                    .transformable(state = formationTransform)
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(onDoubleTap = { formationZoom = 1f })
-                                    }
+                                    .height(62.dp)
                             ) {
-                                LazyRow(
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            scaleX = formationZoom
-                                            scaleY = formationZoom
-                                        }
-                                ) {
-                                    itemsIndexed(myFormations, key = { _, f -> f.id }) { _, f ->
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .border(
-                                                    1.dp,
-                                                    if (isActPhase && selectedCards.size == 1)
-                                                        RamiColors.Gold.copy(0.7f)
-                                                    else RamiColors.Gold.copy(0.2f),
-                                                    RoundedCornerShape(8.dp)
-                                                )
-                                                .clickable {
-                                                    if (isActPhase && localPlayer.hasLaidDown && selectedCards.size == 1) {
-                                                        engine.addCardToFormation(selectedCards.first(), f.id)
-                                                        selectedIds = emptySet()
-                                                    } else if (isActPhase && localPlayer.hasLaidDown && f.hasStealableJoker()) {
-                                                        jokerStealTarget = f
-                                                    }
+                                itemsIndexed(myFormations, key = { _, f -> f.id }) { _, f ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .border(
+                                                1.dp,
+                                                if (isActPhase && selectedCards.size == 1)
+                                                    RamiColors.Gold.copy(0.7f)
+                                                else RamiColors.Gold.copy(0.2f),
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .clickable {
+                                                if (isActPhase && localPlayer.hasLaidDown && selectedCards.size == 1) {
+                                                    engine.addCardToFormation(selectedCards.first(), f.id)
+                                                    selectedIds = emptySet()
+                                                } else if (isActPhase && localPlayer.hasLaidDown && f.hasStealableJoker()) {
+                                                    jokerStealTarget = f
                                                 }
-                                        ) {
-                                            FormationView(formation = f, mode = state.mode)
-                                        }
+                                            }
+                                    ) {
+                                        FormationView(formation = f, mode = state.mode)
                                     }
                                 }
                             }
@@ -1182,14 +1162,27 @@ fun LandscapeHandFan(
     if (cards.isEmpty()) return
 
     BoxWithConstraints(modifier = modifier) {
-        val count   = cards.size
-        val cardW   = 42.dp
-        val cardH   = (maxHeight * 0.92f).coerceAtMost(68.dp)
-        val spacing = if (count > 1)
-            ((maxWidth - cardW) / (count - 1)).coerceAtMost(cardW)
-        else cardW
+        val count      = cards.size
+        val cardW      = 42.dp
+        val cardH      = (maxHeight * 0.92f).coerceAtMost(68.dp)
+        val minSpacing = 26.dp
+        val autoSpacing = if (count > 1) (maxWidth - cardW) / (count - 1) else maxWidth
+        val spacing    = autoSpacing.coerceIn(minSpacing, cardW)
+        val totalW     = if (count > 1) spacing * (count - 1) + cardW else cardW
+        val needsScroll = totalW > maxWidth
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        val scrollState = rememberScrollState()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (needsScroll) Modifier.horizontalScroll(scrollState) else Modifier)
+        ) {
+        Box(
+            modifier = Modifier
+                .width(if (needsScroll) totalW else maxWidth)
+                .fillMaxHeight()
+        ) {
             cards.forEachIndexed { idx, card ->
                 HandCard(
                     card          = card,
@@ -1207,6 +1200,7 @@ fun LandscapeHandFan(
                     onDragEnd     = onDragEnd
                 )
             }
-        }
+        } // inner width Box
+        } // scroll viewport Box
     }
 }

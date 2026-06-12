@@ -39,13 +39,13 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
             // ── Layer 2: main content ───────────────────────────────────────────
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.padding(horizontal = 32.dp)
+                verticalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 12.dp)
             ) {
                 // Logo area
                 LogoHeader()
-
-                Spacer(Modifier.height(4.dp))
 
                 // Mode buttons
                 ModeButton(
@@ -67,8 +67,6 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
                     english = "vs AI  •  Tafdhil  •  71 pts min",
                     onClick = { onNavigate(Screen.Lobby(GameMode.TAFDHIL)) }
                 )
-
-                Spacer(Modifier.height(4.dp))
 
                 // Secondary row: Rules + Settings
                 Row(
@@ -138,7 +136,7 @@ private fun LogoHeader() {
             listOf(-14f, -7f, 0f, 7f, 14f).forEachIndexed { i, rot ->
                 Text(
                     text     = "🃏",
-                    fontSize = (20 + i).sp,
+                    fontSize = (14 + i).sp,
                     modifier = Modifier
                         .graphicsLayer { rotationZ = rot; alpha = 0.55f + i * 0.09f }
                 )
@@ -148,7 +146,7 @@ private fun LogoHeader() {
         // Main title
         Text(
             text      = "رامي تونسي",
-            fontSize  = 40.sp,
+            fontSize  = 34.sp,
             fontWeight = FontWeight.ExtraBold,
             color     = RamiColors.Gold,
             textAlign = TextAlign.Center,
@@ -262,7 +260,7 @@ private fun ModeButton(
 ) {
     Button(
         onClick   = onClick,
-        modifier  = Modifier.fillMaxWidth().height(76.dp),
+        modifier  = Modifier.fillMaxWidth().height(60.dp),
         shape     = RoundedCornerShape(18.dp),
         colors    = ButtonDefaults.buttonColors(
             containerColor = if (highlight) RamiColors.Gold else RamiColors.Gold.copy(alpha = 0.12f),
@@ -277,10 +275,10 @@ private fun ModeButton(
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(emoji, fontSize = 28.sp)
+            Text(emoji, fontSize = 22.sp)
             Column {
-                Text(arabic,  fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text(english, fontSize = 11.sp,
+                Text(arabic,  fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text(english, fontSize = 10.sp,
                     color = if (highlight) RamiColors.DarkGreen.copy(alpha = 0.7f)
                             else RamiColors.TextLight.copy(alpha = 0.55f))
             }
