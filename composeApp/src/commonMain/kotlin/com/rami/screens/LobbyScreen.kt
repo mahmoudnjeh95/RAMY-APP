@@ -36,9 +36,9 @@ fun LobbyScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(RamiColors.DarkGreen)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // ── Header ─────────────────────────────────────────────────────────
             Row(
@@ -51,7 +51,7 @@ fun LobbyScreen(
                 Spacer(Modifier.weight(1f))
                 Text(
                     text       = "${mode.displayAr}  •  ${mode.displayEn}",
-                    fontSize   = 18.sp,
+                    fontSize   = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color      = RamiColors.Gold
                 )
@@ -59,93 +59,125 @@ fun LobbyScreen(
 
             HorizontalDivider(color = RamiColors.Gold.copy(alpha = 0.3f))
 
-            // ── Player count ───────────────────────────────────────────────────
-            SectionLabel("عدد اللاعبين — Players")
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                listOf(2, 4).forEach { count ->
-                    FilterChip(
-                        selected = playerCount == count,
-                        onClick  = { playerCount = count },
-                        label    = { Text("$count لاعبين", fontWeight = FontWeight.Bold) },
-                        colors   = filterChipColors()
-                    )
-                }
-            }
-
-            // ── Player names & AI toggle ────────────────────────────────────────
-            SectionLabel("أسماء اللاعبين — Player Names")
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                repeat(playerCount) { idx ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value          = names[idx],
-                            onValueChange  = { v -> names = names.toMutableList().also { it[idx] = v } },
-                            label          = { Text("لاعب ${idx + 1}") },
-                            singleLine     = true,
-                            modifier       = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-                            colors         = textFieldColors(),
-                            enabled        = idx > 0  // slot 0 always human
-                        )
-                        if (idx > 0) {
-                            // AI toggle
+            // ── Player count + Score limit in one row ──────────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    SectionLabel("عدد اللاعبين — Players")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(2, 4).forEach { count ->
                             FilterChip(
-                                selected = idx in aiSlots,
-                                onClick  = {
-                                    aiSlots = if (idx in aiSlots) aiSlots - idx else aiSlots + idx
-                                },
-                                label    = { Text(if (idx in aiSlots) "AI" else "إنسان", fontSize = 11.sp) },
+                                selected = playerCount == count,
+                                onClick  = { playerCount = count },
+                                label    = { Text("$count لاعبين", fontWeight = FontWeight.Bold, fontSize = 13.sp) },
                                 colors   = filterChipColors()
                             )
-                        } else {
-                            // Fixed label for local player
-                            Text("👤", fontSize = 22.sp)
+                        }
+                    }
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    SectionLabel("حد النقاط — Score Limit")
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(100, 150, 200, 250).forEach { limit ->
+                            FilterChip(
+                                selected = scoreLimit == limit,
+                                onClick  = { scoreLimit = limit },
+                                label    = { Text("$limit", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
+                                colors   = filterChipColors()
+                            )
                         }
                     }
                 }
             }
 
-            // ── Score limit ────────────────────────────────────────────────────
-            SectionLabel("حد النقاط — Score Limit")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(100, 150, 200, 250).forEach { limit ->
-                    FilterChip(
-                        selected = scoreLimit == limit,
-                        onClick  = { scoreLimit = limit },
-                        label    = { Text("$limit", fontWeight = FontWeight.Bold) },
-                        colors   = filterChipColors()
-                    )
+            // ── Player names ────────────────────────────────────────────────────
+            SectionLabel("أسماء اللاعبين — Player Names")
+
+            if (playerCount == 4) {
+                // 2×2 grid: players 0,2 left column — players 1,3 right column
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(0, 2).forEach { idx ->
+                            PlayerNameRow(
+                                idx         = idx,
+                                names       = names,
+                                aiSlots     = aiSlots,
+                                onName      = { i, v -> names = names.toMutableList().also { it[i] = v } },
+                                onAiToggle  = { i -> aiSlots = if (i in aiSlots) aiSlots - i else aiSlots + i }
+                            )
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(1, 3).forEach { idx ->
+                            PlayerNameRow(
+                                idx         = idx,
+                                names       = names,
+                                aiSlots     = aiSlots,
+                                onName      = { i, v -> names = names.toMutableList().also { it[i] = v } },
+                                onAiToggle  = { i -> aiSlots = if (i in aiSlots) aiSlots - i else aiSlots + i }
+                            )
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    repeat(playerCount) { idx ->
+                        PlayerNameRow(
+                            idx         = idx,
+                            names       = names,
+                            aiSlots     = aiSlots,
+                            onName      = { i, v -> names = names.toMutableList().also { it[i] = v } },
+                            onAiToggle  = { i -> aiSlots = if (i in aiSlots) aiSlots - i else aiSlots + i }
+                        )
+                    }
                 }
             }
 
-            // ── AI difficulty (shown only when any AI slots selected) ──────────
+            // ── AI difficulty ──────────────────────────────────────────────────
             if (aiSlots.any { it < playerCount }) {
-                SectionLabel("صعوبة الذكاء — AI Difficulty")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SectionLabel("صعوبة الذكاء — AI:")
                     AiDifficulty.entries.forEach { diff ->
                         FilterChip(
                             selected = aiDifficulty == diff,
                             onClick  = { aiDifficulty = diff },
                             label    = {
                                 Text(
-                                    "${diff.displayAr}  ${diffEmoji(diff)}",
-                                    fontWeight = FontWeight.Bold
+                                    "${diff.displayAr} ${diffEmoji(diff)}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize   = 12.sp
                                 )
                             },
-                            colors   = filterChipColors()
+                            colors = filterChipColors()
                         )
                     }
                 }
-                // Description of selected difficulty
-                Text(
-                    text     = diffDescription(aiDifficulty),
-                    color    = RamiColors.TextLight.copy(alpha = 0.55f),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
             }
 
             Spacer(Modifier.weight(1f))
@@ -160,15 +192,59 @@ fun LobbyScreen(
                         aiDifficulty
                     )
                 },
-                modifier = Modifier.fillMaxWidth().height(60.dp),
-                shape    = RoundedCornerShape(18.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape    = RoundedCornerShape(16.dp),
                 colors   = ButtonDefaults.buttonColors(
                     containerColor = RamiColors.Gold,
                     contentColor   = RamiColors.DarkGreen
                 )
             ) {
-                Text("ابدأ اللعبة  —  Start Game", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("ابدأ اللعبة  —  Start Game", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
+        }
+    }
+}
+
+// ── Single player name row ────────────────────────────────────────────────────
+
+@Composable
+private fun PlayerNameRow(
+    idx: Int,
+    names: List<String>,
+    aiSlots: Set<Int>,
+    onName: (Int, String) -> Unit,
+    onAiToggle: (Int) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        OutlinedTextField(
+            value          = names[idx],
+            onValueChange  = { v -> onName(idx, v) },
+            label          = { Text("لاعب ${idx + 1}", fontSize = 11.sp) },
+            singleLine     = true,
+            modifier       = Modifier.weight(1f),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            colors         = textFieldColors(),
+            enabled        = idx > 0
+        )
+        if (idx > 0) {
+            FilterChip(
+                selected = idx in aiSlots,
+                onClick  = { onAiToggle(idx) },
+                label    = {
+                    Text(
+                        if (idx in aiSlots) "AI" else "👤",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                colors   = filterChipColors(),
+                modifier = Modifier.width(52.dp)
+            )
+        } else {
+            Text("👤", fontSize = 20.sp, modifier = Modifier.width(52.dp))
         }
     }
 }
@@ -177,7 +253,7 @@ fun LobbyScreen(
 
 @Composable
 private fun SectionLabel(text: String) {
-    Text(text, color = RamiColors.TextLight.copy(alpha = 0.7f), fontSize = 13.sp)
+    Text(text, color = RamiColors.TextLight.copy(alpha = 0.7f), fontSize = 11.sp)
 }
 
 @Composable
@@ -191,12 +267,6 @@ private fun diffEmoji(diff: AiDifficulty) = when (diff) {
     AiDifficulty.EASY   -> "🟢"
     AiDifficulty.MEDIUM -> "🟡"
     AiDifficulty.HARD   -> "🔴"
-}
-
-private fun diffDescription(diff: AiDifficulty) = when (diff) {
-    AiDifficulty.EASY   -> "يسحب دائماً من الكومة ويرمي أعلى ورقة — Easy: always draws blind, discards highest card"
-    AiDifficulty.MEDIUM -> "يقيّم المرمى ويختار الرمي بذكاء — Medium: evaluates discard pile, smart discards"
-    AiDifficulty.HARD   -> "يسرق الجوكر ويتجنب إفادة الخصم — Hard: steals Jokers, avoids helping opponents"
 }
 
 @Composable

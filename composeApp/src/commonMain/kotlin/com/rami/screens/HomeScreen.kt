@@ -181,21 +181,21 @@ private fun FloatingSuits() {
     val t = rememberInfiniteTransition(label = "suits")
 
     // Brighter alpha ranges (was 0.03–0.13, now 0.08–0.22)
-    val a1 by t.animateFloat(0.08f, 0.22f,
+    val a1 by t.animateFloat(0.18f, 0.40f,
         infiniteRepeatable(tween(2100), RepeatMode.Reverse, StartOffset(0)),    label = "s1")
-    val a2 by t.animateFloat(0.07f, 0.20f,
+    val a2 by t.animateFloat(0.15f, 0.36f,
         infiniteRepeatable(tween(1800), RepeatMode.Reverse, StartOffset(400)),  label = "s2")
-    val a3 by t.animateFloat(0.09f, 0.21f,
+    val a3 by t.animateFloat(0.20f, 0.42f,
         infiniteRepeatable(tween(2400), RepeatMode.Reverse, StartOffset(800)),  label = "s3")
-    val a4 by t.animateFloat(0.07f, 0.18f,
+    val a4 by t.animateFloat(0.14f, 0.34f,
         infiniteRepeatable(tween(1900), RepeatMode.Reverse, StartOffset(200)),  label = "s4")
-    val a5 by t.animateFloat(0.08f, 0.22f,
+    val a5 by t.animateFloat(0.18f, 0.40f,
         infiniteRepeatable(tween(2200), RepeatMode.Reverse, StartOffset(600)),  label = "s5")
-    val a6 by t.animateFloat(0.07f, 0.19f,
+    val a6 by t.animateFloat(0.15f, 0.36f,
         infiniteRepeatable(tween(1700), RepeatMode.Reverse, StartOffset(1000)), label = "s6")
-    val a7 by t.animateFloat(0.09f, 0.21f,
+    val a7 by t.animateFloat(0.20f, 0.42f,
         infiniteRepeatable(tween(2000), RepeatMode.Reverse, StartOffset(300)),  label = "s7")
-    val a8 by t.animateFloat(0.07f, 0.18f,
+    val a8 by t.animateFloat(0.14f, 0.34f,
         infiniteRepeatable(tween(2300), RepeatMode.Reverse, StartOffset(700)),  label = "s8")
 
     // Slow individual rotations per symbol
