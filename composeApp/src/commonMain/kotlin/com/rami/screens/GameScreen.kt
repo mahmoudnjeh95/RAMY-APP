@@ -1162,14 +1162,16 @@ fun LandscapeHandFan(
     if (cards.isEmpty()) return
 
     BoxWithConstraints(modifier = modifier) {
+        val availW     = maxWidth   // capture before nested lambdas change implicit receiver
+        val availH     = maxHeight
         val count      = cards.size
         val cardW      = 42.dp
-        val cardH      = (maxHeight * 0.92f).coerceAtMost(68.dp)
+        val cardH      = (availH * 0.92f).coerceAtMost(68.dp)
         val minSpacing = 26.dp
-        val autoSpacing = if (count > 1) (maxWidth - cardW) / (count - 1) else maxWidth
+        val autoSpacing = if (count > 1) (availW - cardW) / (count - 1) else availW
         val spacing    = autoSpacing.coerceIn(minSpacing, cardW)
         val totalW     = if (count > 1) spacing * (count - 1) + cardW else cardW
-        val needsScroll = totalW > maxWidth
+        val needsScroll = totalW > availW
 
         val scrollState = rememberScrollState()
 
@@ -1180,7 +1182,7 @@ fun LandscapeHandFan(
         ) {
         Box(
             modifier = Modifier
-                .width(if (needsScroll) totalW else maxWidth)
+                .width(if (needsScroll) totalW else availW)
                 .fillMaxHeight()
         ) {
             cards.forEachIndexed { idx, card ->
