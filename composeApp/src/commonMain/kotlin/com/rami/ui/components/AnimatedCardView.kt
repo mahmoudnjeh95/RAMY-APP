@@ -7,6 +7,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.rami.model.Card
 
@@ -18,6 +19,7 @@ fun DealAnimatedCard(
     modifier: Modifier = Modifier,
     delayMs: Int = 0,
     selected: Boolean = false,
+    fromDeck: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
     var appeared by remember { mutableStateOf(false) }
@@ -31,13 +33,15 @@ fun DealAnimatedCard(
         animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
         label         = "card_alpha"
     )
+    // fromDeck: cards slide down from deck area above; otherwise fade from below
+    val startOffsetY = if (fromDeck) (-70).dp else 30.dp
     val offsetY by animateDpAsState(
-        targetValue   = if (appeared) 0.dp else 30.dp,
-        animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
+        targetValue   = if (appeared) 0.dp else startOffsetY,
+        animationSpec = tween(durationMillis = if (fromDeck) 360 else 320, easing = FastOutSlowInEasing),
         label         = "card_offset"
     )
     val scale by animateFloatAsState(
-        targetValue   = if (appeared) 1f else 0.85f,
+        targetValue   = if (appeared) 1f else if (fromDeck) 0.75f else 0.85f,
         animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
         label         = "card_scale"
     )
@@ -114,7 +118,7 @@ fun aiThinkingAlpha(): Float {
     return alpha
 }
 
-// ─── Card flip (back → face) — used when drawing from deck ────────────────────
+// ─── Card flip (back → face) — slides in from deck area above while flipping ──
 
 @Composable
 fun FlipInCard(
@@ -125,19 +129,33 @@ fun FlipInCard(
 ) {
     var done by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(60)
+        kotlinx.coroutines.delay(50)
         done = true
     }
     val rotY by animateFloatAsState(
         targetValue   = if (done) 0f else 180f,
-        animationSpec = tween(400, easing = FastOutSlowInEasing),
+        animationSpec = tween(420, easing = FastOutSlowInEasing),
         label         = "flipY"
+    )
+    // Slide down from above (simulates card flying from deck to hand)
+    val slideY by animateDpAsState(
+        targetValue   = if (done) 0.dp else (-65).dp,
+        animationSpec = tween(380, easing = FastOutSlowInEasing),
+        label         = "slideY"
+    )
+    val alpha by animateFloatAsState(
+        targetValue   = if (done) 1f else 0f,
+        animationSpec = tween(200, easing = FastOutSlowInEasing),
+        label         = "flipAlpha"
     )
     CardView(
         card     = card,
         faceDown = rotY > 90f,
         selected = selected && rotY <= 90f,
         onClick  = onClick,
-        modifier = modifier.graphicsLayer { rotationY = rotY }
+        modifier = modifier
+            .offset(y = slideY)
+            .alpha(alpha)
+            .graphicsLayer { rotationY = rotY }
     )
 }

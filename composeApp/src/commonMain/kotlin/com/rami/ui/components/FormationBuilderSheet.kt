@@ -1,5 +1,8 @@
 package com.rami.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -169,6 +172,7 @@ fun FormationBuilderSheet(
                                     else Color.Gray.copy(alpha = 0.3f),
                             shape = RoundedCornerShape(12.dp)
                         )
+                        .validationShimmer(isValid = isValid, nonEmpty = group.isNotEmpty())
                         .clickable { activeGroupIdx = idx }
                         .padding(10.dp)
                 ) {

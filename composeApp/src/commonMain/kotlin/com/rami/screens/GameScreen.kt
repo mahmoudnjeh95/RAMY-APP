@@ -22,8 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -91,9 +93,20 @@ fun GameScreen(
     // Card flip — track newest drawn card
     var newestCardId by remember { mutableStateOf<String?>(null) }
 
+    // Particle effects
+    var showConfetti    by remember { mutableStateOf(false) }
+    var showJokerSparks by remember { mutableStateOf(false) }
+
+    // Turn ripple trigger — increments each time the active player changes
+    var turnRippleTick by remember { mutableStateOf(0) }
+
+    // Discard fly animation — card that just landed on discard pile
+    var discardFlyCard       by remember { mutableStateOf<Card?>(null) }
+    val prevDiscardId        = remember { mutableStateOf<String?>(null) }
+
     // ── Effects ───────────────────────────────────────────────────────────────
 
-    // "نزل!" banner
+    // "نزل!" banner + confetti
     val prevLaidCount = remember { mutableStateOf(0) }
     LaunchedEffect(state.players.count { it.hasLaidDown }) {
         val nowLaid = state.players.count { it.hasLaidDown }
@@ -101,10 +114,28 @@ fun GameScreen(
             val who = state.players.firstOrNull { it.hasLaidDown }
             nazoulBannerText = "نزل ${who?.name ?: ""} !"
             showNazoulBanner = true
+            showConfetti     = true
             delay(2200)
             showNazoulBanner = false
+            showConfetti     = false
         }
         prevLaidCount.value = nowLaid
+    }
+
+    // Turn ripple — fires each time the active player index changes
+    LaunchedEffect(state.currentPlayerIndex) {
+        turnRippleTick++
+    }
+
+    // Discard fly — detect new top of discard pile
+    LaunchedEffect(state.discardPile.size) {
+        val newTop = state.discardPile.lastOrNull() ?: return@LaunchedEffect
+        if (newTop.id != prevDiscardId.value) {
+            prevDiscardId.value = newTop.id
+            discardFlyCard = newTop
+            delay(480)
+            discardFlyCard = null
+        }
     }
 
     // AI turn
@@ -184,6 +215,8 @@ fun GameScreen(
                         )
                     )
             ) {
+                // Ambient felt texture overlay
+                TableTexture(modifier = Modifier.fillMaxSize())
                 Column(modifier = Modifier.fillMaxSize()) {
 
                     // ══════════════════════════════════════════════════════════
@@ -213,10 +246,14 @@ fun GameScreen(
                     // ══════════════════════════════════════════════════════════
                     // MIDDLE: Table center
                     // ══════════════════════════════════════════════════════════
-                    Row(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(0.32f)
+                    ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
                             .padding(horizontal = 12.dp, vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment     = Alignment.CenterVertically
@@ -264,6 +301,11 @@ fun GameScreen(
                             modifier     = Modifier.width(80.dp)
                         )
                     }
+                    // Discard fly overlay — card animates from bottom to discard pile
+                    discardFlyCard?.let { flyCard ->
+                        DiscardFlyOverlay(card = flyCard, modifier = Modifier.fillMaxSize())
+                    }
+                    } // end MIDDLE Box
 
                     // ══════════════════════════════════════════════════════════
                     // BOTTOM: Local player zone
@@ -361,11 +403,17 @@ fun GameScreen(
                                 if (localPlayer.hasLaidDown)
                                     Text("نزل ✓", color = RamiColors.LightGold, fontSize = 10.sp)
                             }
-                            Text(
-                                "$animMyScore pts  •  ${localPlayer.handSize} 🃏",
-                                color    = RamiColors.TextLight.copy(0.65f),
-                                fontSize = 11.sp
-                            )
+                            Box {
+                                Text(
+                                    "$animMyScore pts  •  ${localPlayer.handSize} 🃏",
+                                    color    = RamiColors.TextLight.copy(0.65f),
+                                    fontSize = 11.sp
+                                )
+                                ScoreDelta(
+                                    score    = localPlayer.score,
+                                    modifier = Modifier.align(Alignment.TopCenter)
+                                )
+                            }
                         }
 
                         // Hand fan — all cards visible, drag & drop + flip animation
@@ -433,7 +481,8 @@ fun GameScreen(
                             nazoulBannerText,
                             color      = RamiColors.DarkGreen,
                             fontSize   = 18.sp,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier   = Modifier.infiniteGoldShimmer()
                         )
                     }
                 }
@@ -450,6 +499,24 @@ fun GameScreen(
                             .zIndex(5f)
                     )
                 }
+
+                // ── Turn transition ripple ────────────────────────────────
+                TurnRipple(
+                    trigger  = turnRippleTick,
+                    modifier = Modifier.fillMaxSize().zIndex(3f)
+                )
+
+                // ── Confetti burst on Nazoul ──────────────────────────────
+                ConfettiBurst(
+                    trigger  = showConfetti,
+                    modifier = Modifier.fillMaxSize().zIndex(20f)
+                )
+
+                // ── Joker steal sparks ────────────────────────────────────
+                SparkBurst(
+                    trigger  = showJokerSparks,
+                    modifier = Modifier.fillMaxSize().zIndex(20f)
+                )
 
                 // ── Floating drag card overlay ─────────────────────────────
                 dragState?.let { ds ->
@@ -518,6 +585,7 @@ fun GameScreen(
                     onConfirm  = { jokerIdx, replacement ->
                         val ok = engine.stealJoker(f.id, jokerIdx, replacement)
                         if (!ok) scope.launch { snackbarHost.showSnackbar("❌ لا يمكن سرقة هذا الجوكر") }
+                        else scope.launch { showJokerSparks = true; delay(800); showJokerSparks = false }
                         jokerStealTarget = null
                         selectedIds = emptySet()
                     },
@@ -525,6 +593,45 @@ fun GameScreen(
                 )
             }
         }
+    }
+}
+
+// ─── Discard fly overlay ─────────────────────────────────────────────────────
+
+@Composable
+private fun DiscardFlyOverlay(card: Card, modifier: Modifier = Modifier) {
+    var ready by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(30)
+        ready = true
+    }
+    // Card slides from hand area (bottom = large Y) up to discard pile (Y = 0)
+    val offsetY by animateDpAsState(
+        targetValue   = if (ready) 0.dp else 180.dp,
+        animationSpec = tween(420, easing = FastOutSlowInEasing),
+        label         = "discardFlyY"
+    )
+    val alpha by animateFloatAsState(
+        targetValue   = if (ready) 1f else 0f,
+        animationSpec = tween(150),
+        label         = "discardFlyA"
+    )
+    val rot by animateFloatAsState(
+        targetValue   = if (ready) -8f else 0f,
+        animationSpec = tween(420, easing = FastOutSlowInEasing),
+        label         = "discardFlyR"
+    )
+    Box(
+        modifier = modifier.zIndex(50f),
+        contentAlignment = Alignment.Center
+    ) {
+        CardView(
+            card     = card,
+            modifier = Modifier
+                .offset(y = offsetY)
+                .alpha(alpha)
+                .graphicsLayer { rotationZ = rot; shadowElevation = 24f }
+        )
     }
 }
 
@@ -590,11 +697,17 @@ private fun OpponentPanel(
                 fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                 maxLines   = 1
             )
-            Text(
-                "${animScore}pts",
-                color    = RamiColors.TextLight.copy(0.55f),
-                fontSize = 9.sp
-            )
+            Box {
+                Text(
+                    "${animScore}pts",
+                    color    = RamiColors.TextLight.copy(0.55f),
+                    fontSize = 9.sp
+                )
+                ScoreDelta(
+                    score    = player.score,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
             if (player.hasLaidDown) Text("✓", color = RamiColors.LightGold, fontSize = 9.sp)
         }
 
@@ -736,6 +849,19 @@ private fun DeckPile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Pulsing gold glow — always run animation, just return 0 when not draw phase
+    val deckPulse = rememberInfiniteTransition(label = "deck_glow")
+    val rawGlow by deckPulse.animateFloat(
+        initialValue  = 0.25f,
+        targetValue   = 0.80f,
+        animationSpec = infiniteRepeatable(
+            animation  = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "deck_ga"
+    )
+    val glowAlpha = if (enabled) rawGlow else 0f
+
     Column(
         modifier            = modifier.fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -744,12 +870,21 @@ private fun DeckPile(
         Box(
             modifier = Modifier
                 .size(50.dp, 72.dp)
+                .drawBehind {
+                    if (enabled && glowAlpha > 0f) {
+                        drawRoundRect(
+                            color        = RamiColors.Gold.copy(alpha = glowAlpha * 0.4f),
+                            cornerRadius = CornerRadius(8.dp.toPx()),
+                            blendMode    = BlendMode.SrcOver
+                        )
+                    }
+                }
                 .clip(RoundedCornerShape(8.dp))
                 .background(if (enabled) RamiColors.Gold.copy(0.2f) else Color.Gray.copy(0.1f))
                 .border(
-                    1.5.dp,
-                    if (enabled) RamiColors.Gold else Color.Gray.copy(0.3f),
-                    RoundedCornerShape(8.dp)
+                    width = if (enabled) 2.dp else 1.5.dp,
+                    color = if (enabled) RamiColors.Gold.copy(glowAlpha) else Color.Gray.copy(0.3f),
+                    shape = RoundedCornerShape(8.dp)
                 )
                 .clickable(enabled = enabled, onClick = onClick),
             contentAlignment = Alignment.Center

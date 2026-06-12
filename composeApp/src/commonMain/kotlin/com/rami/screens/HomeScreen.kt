@@ -182,22 +182,41 @@ private fun LogoHeader() {
 private fun FloatingSuits() {
     val t = rememberInfiniteTransition(label = "suits")
 
-    val a1 by t.animateFloat(0.04f, 0.13f,
+    // Brighter alpha ranges (was 0.03–0.13, now 0.08–0.22)
+    val a1 by t.animateFloat(0.08f, 0.22f,
         infiniteRepeatable(tween(2100), RepeatMode.Reverse, StartOffset(0)),    label = "s1")
-    val a2 by t.animateFloat(0.03f, 0.11f,
+    val a2 by t.animateFloat(0.07f, 0.20f,
         infiniteRepeatable(tween(1800), RepeatMode.Reverse, StartOffset(400)),  label = "s2")
-    val a3 by t.animateFloat(0.04f, 0.12f,
+    val a3 by t.animateFloat(0.09f, 0.21f,
         infiniteRepeatable(tween(2400), RepeatMode.Reverse, StartOffset(800)),  label = "s3")
-    val a4 by t.animateFloat(0.03f, 0.10f,
+    val a4 by t.animateFloat(0.07f, 0.18f,
         infiniteRepeatable(tween(1900), RepeatMode.Reverse, StartOffset(200)),  label = "s4")
-    val a5 by t.animateFloat(0.04f, 0.13f,
+    val a5 by t.animateFloat(0.08f, 0.22f,
         infiniteRepeatable(tween(2200), RepeatMode.Reverse, StartOffset(600)),  label = "s5")
-    val a6 by t.animateFloat(0.03f, 0.11f,
+    val a6 by t.animateFloat(0.07f, 0.19f,
         infiniteRepeatable(tween(1700), RepeatMode.Reverse, StartOffset(1000)), label = "s6")
-    val a7 by t.animateFloat(0.04f, 0.12f,
+    val a7 by t.animateFloat(0.09f, 0.21f,
         infiniteRepeatable(tween(2000), RepeatMode.Reverse, StartOffset(300)),  label = "s7")
-    val a8 by t.animateFloat(0.03f, 0.10f,
+    val a8 by t.animateFloat(0.07f, 0.18f,
         infiniteRepeatable(tween(2300), RepeatMode.Reverse, StartOffset(700)),  label = "s8")
+
+    // Slow individual rotations per symbol
+    val r1 by t.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(18000, easing = LinearEasing)), label = "r1")
+    val r2 by t.animateFloat(360f, 0f,
+        infiniteRepeatable(tween(22000, easing = LinearEasing)), label = "r2")
+    val r3 by t.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(16000, easing = LinearEasing)), label = "r3")
+    val r4 by t.animateFloat(360f, 0f,
+        infiniteRepeatable(tween(24000, easing = LinearEasing)), label = "r4")
+    val r5 by t.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(20000, easing = LinearEasing)), label = "r5")
+    val r6 by t.animateFloat(360f, 0f,
+        infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "r6")
+    val r7 by t.animateFloat(0f, 360f,
+        infiniteRepeatable(tween(26000, easing = LinearEasing)), label = "r7")
+    val r8 by t.animateFloat(360f, 0f,
+        infiniteRepeatable(tween(19000, easing = LinearEasing)), label = "r8")
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val w = maxWidth
@@ -205,21 +224,29 @@ private fun FloatingSuits() {
         val red = Color(0xFFB71C1C)
 
         Text("♠", fontSize = 46.sp, color = Color.White.copy(alpha = a1),
-             modifier = Modifier.offset(x = w * 0.06f, y = h * 0.07f))
+             modifier = Modifier.offset(x = w * 0.06f, y = h * 0.07f)
+                 .graphicsLayer { rotationZ = r1 })
         Text("♥", fontSize = 38.sp, color = red.copy(alpha = a2),
-             modifier = Modifier.offset(x = w * 0.82f, y = h * 0.12f))
+             modifier = Modifier.offset(x = w * 0.82f, y = h * 0.12f)
+                 .graphicsLayer { rotationZ = r2 })
         Text("♦", fontSize = 42.sp, color = red.copy(alpha = a3),
-             modifier = Modifier.offset(x = w * 0.05f, y = h * 0.50f))
+             modifier = Modifier.offset(x = w * 0.05f, y = h * 0.50f)
+                 .graphicsLayer { rotationZ = r3 })
         Text("♣", fontSize = 34.sp, color = Color.White.copy(alpha = a4),
-             modifier = Modifier.offset(x = w * 0.86f, y = h * 0.42f))
+             modifier = Modifier.offset(x = w * 0.86f, y = h * 0.42f)
+                 .graphicsLayer { rotationZ = r4 })
         Text("♠", fontSize = 50.sp, color = Color.White.copy(alpha = a5),
-             modifier = Modifier.offset(x = w * 0.55f, y = h * 0.88f))
+             modifier = Modifier.offset(x = w * 0.55f, y = h * 0.88f)
+                 .graphicsLayer { rotationZ = r5 })
         Text("♥", fontSize = 36.sp, color = red.copy(alpha = a6),
-             modifier = Modifier.offset(x = w * 0.20f, y = h * 0.82f))
+             modifier = Modifier.offset(x = w * 0.20f, y = h * 0.82f)
+                 .graphicsLayer { rotationZ = r6 })
         Text("♦", fontSize = 44.sp, color = red.copy(alpha = a7),
-             modifier = Modifier.offset(x = w * 0.46f, y = h * 0.03f))
+             modifier = Modifier.offset(x = w * 0.46f, y = h * 0.03f)
+                 .graphicsLayer { rotationZ = r7 })
         Text("♣", fontSize = 40.sp, color = Color.White.copy(alpha = a8),
-             modifier = Modifier.offset(x = w * 0.73f, y = h * 0.62f))
+             modifier = Modifier.offset(x = w * 0.73f, y = h * 0.62f)
+                 .graphicsLayer { rotationZ = r8 })
     }
 }
 

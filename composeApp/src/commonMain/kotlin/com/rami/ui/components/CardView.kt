@@ -1,5 +1,7 @@
 package com.rami.ui.components
 
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,8 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,15 +67,22 @@ fun CardView(
     val baseModifier = modifier
         .width(width)
         .height(height)
-        // Outer glow shadow when selected
+        // Directional cast shadow (offset downward) + selection glow
         .drawBehind {
             if (selected) drawGlow(glowColor, radius.toPx(), 14.dp.toPx())
+            // Subtle elliptical cast shadow below card
+            val shadowAlpha = if (isPressed) 0.08f else 0.18f
+            drawOval(
+                color   = Color.Black.copy(alpha = shadowAlpha),
+                topLeft = Offset(-3.dp.toPx(), size.height - 3.dp.toPx()),
+                size    = Size(size.width + 6.dp.toPx(), 7.dp.toPx())
+            )
         }
         .shadow(
-            elevation       = when { selected -> 10.dp; isPressed -> 1.dp; else -> 3.dp },
+            elevation       = when { selected -> 10.dp; isPressed -> 1.dp; else -> 4.dp },
             shape           = shape,
-            ambientColor    = if (selected) RamiColors.Gold.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.3f),
-            spotColor       = if (selected) RamiColors.Gold.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.3f)
+            ambientColor    = if (selected) RamiColors.Gold.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.25f),
+            spotColor       = if (selected) RamiColors.Gold.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.40f)
         )
         .clip(shape)
         .background(if (faceDown) RamiColors.FeltGreen else Color.Transparent)
@@ -146,7 +158,7 @@ private fun DrawScope.drawCardBackPattern() {
     while (x < size.width) {
         var y = 0f
         while (y < size.height) {
-            drawCircle(color, dotR, center = androidx.compose.ui.geometry.Offset(x, y))
+            drawCircle(color, dotR, center = Offset(x, y))
             y += spacing
         }
         x += spacing
@@ -156,8 +168,8 @@ private fun DrawScope.drawCardBackPattern() {
     var i = -size.height
     while (i < size.width) {
         drawLine(lineColor,
-            start = androidx.compose.ui.geometry.Offset(i, 0f),
-            end   = androidx.compose.ui.geometry.Offset(i + size.height, size.height),
+            start = Offset(i, 0f),
+            end   = Offset(i + size.height, size.height),
             strokeWidth = 1.dp.toPx()
         )
         i += spacing
@@ -271,72 +283,121 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
 
 @Composable
 private fun JokerContent(small: Boolean) {
+    // Always call composable (Rules of Compose), but only use value when full-size
+    val infiniteT = rememberInfiniteTransition(label = "joker_rot")
+    val rawRotation by infiniteT.animateFloat(
+        initialValue  = 0f,
+        targetValue   = 360f,
+        animationSpec = infiniteRepeatable(tween(6000, easing = LinearEasing)),
+        label         = "joker_r"
+    )
+    val rotation = if (!small) rawRotation else 0f
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 brush = Brush.radialGradient(
-                    listOf(Color(0xFF4A0080).copy(alpha = 0.08f), Color.Transparent)
+                    colors = listOf(
+                        Color(0xFF6A0080).copy(alpha = 0.35f),
+                        Color(0xFF1A0030).copy(alpha = 0.70f)
+                    )
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
+        // Radiating lines canvas
+        if (!small) {
+            Canvas(modifier = Modifier.fillMaxSize()) { drawJokerRays(rotation) }
+        }
+
+        // Center star + label
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text     = "✦",
-                fontSize = if (small) 14.sp else 22.sp,
-                color    = Color(0xFF9C27B0),
-                fontWeight = FontWeight.Bold
+                text       = "★",
+                fontSize   = if (small) 16.sp else 24.sp,
+                color      = Color(0xFFFFD700),
+                fontWeight = FontWeight.Bold,
+                modifier   = if (!small) Modifier.graphicsLayer { rotationZ = rotation * 0.4f } else Modifier
             )
             if (!small) {
                 Text(
-                    text = "JOKER",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.5.sp,
-                    color = Color(0xFFAB47BC)
-                )
-                Text(
-                    text = "✦",
-                    fontSize = 10.sp,
-                    color = Color(0xFFD4AF37)
+                    text          = "JOKER",
+                    fontSize      = 8.sp,
+                    fontWeight    = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp,
+                    color         = Color(0xFFE040FB)
                 )
             } else {
-                Text("JKR", fontSize = 7.sp, color = Color(0xFF9C27B0), fontWeight = FontWeight.Bold)
+                Text("JKR", fontSize = 7.sp, color = Color(0xFFE040FB), fontWeight = FontWeight.Bold)
             }
         }
-        // Corner labels
+
+        // Corner labels — suit symbols instead of plain stars
         if (!small) {
-            Text(
-                "★", fontSize = 8.sp, color = Color(0xFFD4AF37),
-                modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
-            )
-            Text(
-                "★", fontSize = 8.sp, color = Color(0xFFD4AF37),
-                modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp)
-                    .graphicsLayer { rotationZ = 180f }
-            )
+            Column(
+                modifier            = Modifier.align(Alignment.TopStart).padding(3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("♦", fontSize = 8.sp, color = Color(0xFFD4AF37))
+                Text("♣", fontSize = 7.sp, color = Color(0xFFCE93D8))
+            }
+            Column(
+                modifier            = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(3.dp)
+                    .graphicsLayer { rotationZ = 180f },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("♦", fontSize = 8.sp, color = Color(0xFFD4AF37))
+                Text("♣", fontSize = 7.sp, color = Color(0xFFCE93D8))
+            }
         }
     }
+}
+
+// ─── Joker radiating rays helper ──────────────────────────────────────────────
+
+private fun DrawScope.drawJokerRays(rotation: Float) {
+    val cx     = size.width / 2f
+    val cy     = size.height / 2f
+    val innerR = 14f * density
+    val outerR = 26f * density
+    val rays   = 12
+    repeat(rays) { i ->
+        val angle = (i.toDouble() / rays) * 2.0 * kotlin.math.PI + rotation.toDouble() * kotlin.math.PI / 180.0
+        val cosA  = kotlin.math.cos(angle).toFloat()
+        val sinA  = kotlin.math.sin(angle).toFloat()
+        drawLine(
+            color       = Color(0xFFD4AF37).copy(alpha = 0.35f),
+            start       = Offset(cx + cosA * innerR, cy + sinA * innerR),
+            end         = Offset(cx + cosA * outerR, cy + sinA * outerR),
+            strokeWidth = density
+        )
+    }
+    drawCircle(
+        color  = Color(0xFFD4AF37).copy(alpha = 0.20f),
+        radius = 26f * density,
+        center = Offset(cx, cy),
+        style  = Stroke(width = 0.8f * density)
+    )
 }
 
 // ─── Glow helper ──────────────────────────────────────────────────────────────
 
 private fun DrawScope.drawGlow(color: Color, cornerRadius: Float, spread: Float) {
-    val paint = Paint().apply {
-        asFrameworkPaint().apply {
-            isAntiAlias = true
-            this.color = android.graphics.Color.TRANSPARENT
-            setShadowLayer(spread, 0f, 0f, color.copy(alpha = 0.6f).toArgb())
-        }
+    val steps = 5
+    repeat(steps) { i ->
+        val fraction = (i + 1).toFloat() / (steps + 1)
+        val expand = spread * fraction
+        drawRoundRect(
+            color        = color.copy(alpha = 0.10f * (1f - fraction * 0.6f)),
+            topLeft      = Offset(-expand / 2f, -expand / 2f),
+            size         = Size(size.width + expand, size.height + expand),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius + expand / 2f)
+        )
     }
-    drawRoundRect(
-        color        = Color.Transparent,
-        size         = size,
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius),
-        blendMode    = BlendMode.SrcOver
-    )
 }
