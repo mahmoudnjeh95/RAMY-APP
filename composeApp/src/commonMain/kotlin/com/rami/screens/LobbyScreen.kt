@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rami.ai.AiDifficulty
@@ -87,16 +88,27 @@ fun LobbyScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     SectionLabel("حد النقاط — Score Limit")
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf(100, 150, 200, 250).forEach { limit ->
-                            FilterChip(
-                                selected = scoreLimit == limit,
-                                onClick  = { scoreLimit = limit },
-                                label    = { Text("$limit", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
-                                colors   = filterChipColors()
-                            )
-                        }
-                    }
+                    var scoreTxt by remember { mutableStateOf(scoreLimit.toString()) }
+                    OutlinedTextField(
+                        value         = scoreTxt,
+                        onValueChange = { v ->
+                            scoreTxt = v.filter { it.isDigit() }.take(4)
+                            scoreTxt.toIntOrNull()?.takeIf { it > 0 }?.let { scoreLimit = it }
+                        },
+                        singleLine    = true,
+                        modifier      = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction    = ImeAction.Done
+                        ),
+                        colors        = textFieldColors(),
+                        placeholder   = { Text("150 نقطة...", fontSize = 11.sp, color = RamiColors.TextLight.copy(0.3f)) }
+                    )
+                    Text(
+                        "مثال: 100 / 150 / 200 / 250",
+                        color    = RamiColors.TextLight.copy(0.35f),
+                        fontSize = 9.sp
+                    )
                 }
             }
 

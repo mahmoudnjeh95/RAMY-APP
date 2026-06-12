@@ -7,8 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -244,60 +242,69 @@ fun GameScreen(
                             .fillMaxWidth()
                             .weight(0.28f)
                     ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment     = Alignment.CenterVertically
-                    ) {
-                        DeckPile(
-                            deckSize = state.deckSize,
-                            enabled  = isDrawPhase,
-                            onClick  = { engine.drawFromDeck() },
-                            modifier = Modifier.width(56.dp)
-                        )
-
-                        DiscardFan(
-                            discardPile = state.discardPile,
-                            enabled     = isDrawPhase,
-                            onClick     = { engine.drawFromDiscard() },
-                            modifier    = Modifier.weight(1f)
-                        )
-
-                        // Drop zone — slides in during drag
-                        NazoulDropZone(
-                            visible      = isDragging && isActPhase,
-                            isOver       = isDraggingOverZone,
-                            onRectUpdate = { nazoulDropZoneRect = it },
-                            modifier     = Modifier.width(84.dp)
-                        )
-
-                        ActionColumn(
-                            isActPhase    = isActPhase,
-                            hasLaidDown   = localPlayer.hasLaidDown,
-                            selectedCards = selectedCards,
-                            onOpenBuilder = { showFormationBuilder = true },
-                            onDiscard = {
-                                selectedCards.firstOrNull()?.let { card ->
-                                    engine.discard(card)
-                                    selectedIds = emptySet()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment     = Alignment.CenterVertically
+                        ) {
+                            // Deck + Discard side by side — NazoulDropZone overlays them during drag
+                            Box(modifier = Modifier.weight(2f).fillMaxHeight()) {
+                                Row(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    DeckPile(
+                                        deckSize = state.deckSize,
+                                        enabled  = isDrawPhase,
+                                        onClick  = { engine.drawFromDeck() },
+                                        modifier = Modifier.weight(1f).fillMaxHeight()
+                                    )
+                                    DiscardFan(
+                                        discardPile = state.discardPile,
+                                        enabled     = isDrawPhase,
+                                        onClick     = { engine.drawFromDiscard() },
+                                        modifier    = Modifier.weight(1f).fillMaxHeight()
+                                    )
                                 }
-                            },
-                            modifier = Modifier.width(110.dp)
-                        )
-
-                        TurnInfoPanel(
-                            state        = state,
-                            localPlayer  = localPlayer,
-                            timerSeconds = if (isMyTurn) timerSeconds else 30,
-                            modifier     = Modifier.width(80.dp)
-                        )
-                    }
-                    // Discard fly overlay — card animates from bottom to discard pile
-                    discardFlyCard?.let { flyCard ->
-                        DiscardFlyOverlay(card = flyCard, modifier = Modifier.fillMaxSize())
-                    }
+                                // Drop zone overlays the entire deck+discard area during drag
+                                NazoulDropZone(
+                                    visible      = isDragging && isActPhase,
+                                    isOver       = isDraggingOverZone,
+                                    onRectUpdate = { nazoulDropZoneRect = it },
+                                    modifier     = Modifier.fillMaxSize()
+                                )
+                            }
+                            // Right: turn info + action buttons
+                            Column(
+                                modifier = Modifier.weight(1.2f).fillMaxHeight(),
+                                verticalArrangement   = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                                horizontalAlignment   = Alignment.CenterHorizontally
+                            ) {
+                                TurnInfoPanel(
+                                    state        = state,
+                                    localPlayer  = localPlayer,
+                                    timerSeconds = if (isMyTurn) timerSeconds else 30
+                                )
+                                ActionColumn(
+                                    isActPhase    = isActPhase,
+                                    hasLaidDown   = localPlayer.hasLaidDown,
+                                    selectedCards = selectedCards,
+                                    onOpenBuilder = { showFormationBuilder = true },
+                                    onDiscard = {
+                                        selectedCards.firstOrNull()?.let { card ->
+                                            engine.discard(card)
+                                            selectedIds = emptySet()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                        // Discard fly overlay
+                        discardFlyCard?.let { flyCard ->
+                            DiscardFlyOverlay(card = flyCard, modifier = Modifier.fillMaxSize())
+                        }
                     } // end MIDDLE Box
 
                     // ══════════════════════════════════════════════════════════
@@ -774,7 +781,7 @@ private fun DiscardFan(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxHeight()
             .clip(RoundedCornerShape(10.dp))
@@ -784,37 +791,48 @@ private fun DiscardFan(
                 RoundedCornerShape(10.dp)
             )
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(6.dp),
-        contentAlignment = Alignment.Center
+            .padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (discardPile.isEmpty()) {
-            Text(
-                "المرمى\nفارغ",
-                color    = RamiColors.TextLight.copy(0.3f),
-                fontSize = 11.sp,
-                textAlign = TextAlign.Center
-            )
-        } else {
-            val last3 = discardPile.takeLast(3)
-            Box {
-                last3.forEachIndexed { i, card ->
-                    val offset = ((i - last3.lastIndex) * 5).dp
-                    CardView(
-                        card     = card,
-                        modifier = Modifier
-                            .offset(x = offset * i, y = offset)
-                            .zIndex(i.toFloat())
-                            .graphicsLayer { rotationZ = (i - last3.lastIndex) * 4f }
+        Box(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            if (discardPile.isEmpty()) {
+                Text(
+                    "المرمى\nفارغ",
+                    color     = RamiColors.TextLight.copy(0.3f),
+                    fontSize  = 11.sp,
+                    textAlign = TextAlign.Center
+                )
+            } else {
+                // Show top card prominently with subtle stack depth below
+                if (discardPile.size > 2) {
+                    Box(
+                        Modifier.offset(x = 4.dp, y = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(0.25f))
+                            .size(CardSize.Width, CardSize.Height)
                     )
                 }
+                if (discardPile.size > 1) {
+                    Box(
+                        Modifier.offset(x = 2.dp, y = 2.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(0.15f))
+                            .size(CardSize.Width, CardSize.Height)
+                    )
+                }
+                CardView(card = discardPile.last())
             }
         }
+        Spacer(Modifier.height(2.dp))
         if (enabled) {
             Text(
                 "اسحب من المرمى",
-                color    = RamiColors.Gold.copy(0.8f),
-                fontSize = 9.sp,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp)
+                color      = RamiColors.Gold.copy(0.8f),
+                fontSize   = 9.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -843,40 +861,43 @@ private fun DeckPile(
     val glowAlpha = if (enabled) rawGlow else 0f
 
     Column(
-        modifier            = modifier.fillMaxHeight(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier            = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(50.dp, 72.dp)
+                .fillMaxWidth()
+                .weight(1f)
                 .drawBehind {
                     if (enabled && glowAlpha > 0f) {
                         drawRoundRect(
                             color        = RamiColors.Gold.copy(alpha = glowAlpha * 0.4f),
-                            cornerRadius = CornerRadius(8.dp.toPx()),
+                            cornerRadius = CornerRadius(10.dp.toPx()),
                             blendMode    = BlendMode.SrcOver
                         )
                     }
                 }
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (enabled) RamiColors.Gold.copy(0.2f) else Color.Gray.copy(0.1f))
+                .clip(RoundedCornerShape(10.dp))
+                .background(Brush.linearGradient(listOf(Color(0xFF1A3A5C), Color(0xFF0D2137))))
                 .border(
                     width = if (enabled) 2.dp else 1.5.dp,
                     color = if (enabled) RamiColors.Gold.copy(glowAlpha) else Color.Gray.copy(0.3f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(10.dp)
                 )
                 .clickable(enabled = enabled, onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
-            Text("🂠", fontSize = 28.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("♦", color = Color(0xFFD4AF37), fontSize = 22.sp)
+                Text("R",  color = Color(0xFFD4AF37), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text("$deckSize 🃏", color = Color.White.copy(0.5f), fontSize = 9.sp)
+            }
         }
-        Text(
-            "$deckSize 🃏",
-            color    = if (enabled) RamiColors.TextLight else RamiColors.TextLight.copy(0.4f),
-            fontSize = 10.sp
-        )
-        if (enabled) Text("اسحب", color = RamiColors.Gold, fontSize = 9.sp)
+        Spacer(Modifier.height(2.dp))
+        if (enabled) {
+            Text("اسحب من الورق", color = RamiColors.Gold, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
@@ -897,7 +918,7 @@ private fun NazoulDropZone(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxHeight()
+                .fillMaxSize()
                 .onGloballyPositioned { coords ->
                     val pos = coords.positionInRoot()
                     onRectUpdate(
@@ -1048,6 +1069,12 @@ private fun TurnInfoPanel(
             maxLines = 2
         )
         Text("جولة ${state.roundNumber}", color = RamiColors.TextLight.copy(0.4f), fontSize = 9.sp)
+        Text(
+            "خسارة: ${state.scoreLimit} نقطة",
+            color    = RamiColors.Gold.copy(0.55f),
+            fontSize = 8.sp,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -1075,15 +1102,12 @@ private fun MiniFormationView(formation: Formation, mode: GameMode) {
     }
 }
 
-// ─── Individual hand card (extracted for stable remember) ─────────────────────
+// ─── Individual hand card ─────────────────────────────────────────────────────
 
 @Composable
 private fun HandCard(
     card: Card,
     idx: Int,
-    cardW: Dp,
-    cardH: Dp,
-    spacing: Dp,
     isSelected: Boolean,
     isNewest: Boolean,
     onToggle: (String) -> Unit,
@@ -1096,16 +1120,11 @@ private fun HandCard(
     var cardAbsPos by remember { mutableStateOf(Offset.Zero) }
 
     val cardModifier = Modifier
-        .width(cardW)
-        .height(cardH)
-        .offset(
-            x = spacing * idx,
-            y = if (isSelected) (-10).dp else 0.dp
-        )
+        .width(CardSize.Width)
+        .height(CardSize.Height)
+        .offset(y = if (isSelected) (-14).dp else 0.dp)
         .zIndex(if (isSelected) 100f + idx else idx.toFloat())
-        .onGloballyPositioned { coords ->
-            cardAbsPos = coords.positionInRoot()
-        }
+        .onGloballyPositioned { coords -> cardAbsPos = coords.positionInRoot() }
         .then(
             if (onDragStart != null) {
                 Modifier.pointerInput(card.id, allSelectedIds) {
@@ -1121,7 +1140,7 @@ private fun HandCard(
                             change.consume()
                             onDragMove?.invoke(dragAmount)
                         },
-                        onDragEnd   = { onDragEnd?.invoke() },
+                        onDragEnd    = { onDragEnd?.invoke() },
                         onDragCancel = { onDragEnd?.invoke() }
                     )
                 }
@@ -1129,24 +1148,13 @@ private fun HandCard(
         )
 
     if (isNewest) {
-        FlipInCard(
-            card     = card,
-            selected = isSelected,
-            onClick  = { onToggle(card.id) },
-            modifier = cardModifier
-        )
+        FlipInCard(card = card, selected = isSelected, onClick = { onToggle(card.id) }, modifier = cardModifier)
     } else {
-        DealAnimatedCard(
-            card     = card,
-            selected = isSelected,
-            delayMs  = idx * 25,
-            onClick  = { onToggle(card.id) },
-            modifier = cardModifier
-        )
+        DealAnimatedCard(card = card, selected = isSelected, delayMs = idx * 25, onClick = { onToggle(card.id) }, modifier = cardModifier)
     }
 }
 
-// ─── Landscape hand fan — all cards visible, drag & drop support ──────────────
+// ─── Hand row — LazyRow with natural card overlap, full-size cards ────────────
 
 @Composable
 fun LandscapeHandFan(
@@ -1160,49 +1168,24 @@ fun LandscapeHandFan(
     modifier: Modifier = Modifier
 ) {
     if (cards.isEmpty()) return
-
-    BoxWithConstraints(modifier = modifier) {
-        val availW     = maxWidth   // capture before nested lambdas change implicit receiver
-        val availH     = maxHeight
-        val count      = cards.size
-        val cardW      = 42.dp
-        val cardH      = (availH * 0.92f).coerceAtMost(68.dp)
-        val minSpacing = 26.dp
-        val autoSpacing = if (count > 1) (availW - cardW) / (count - 1) else availW
-        val spacing    = autoSpacing.coerceIn(minSpacing, cardW)
-        val totalW     = if (count > 1) spacing * (count - 1) + cardW else cardW
-        val needsScroll = totalW > availW
-
-        val scrollState = rememberScrollState()
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (needsScroll) Modifier.horizontalScroll(scrollState) else Modifier)
-        ) {
-        Box(
-            modifier = Modifier
-                .width(if (needsScroll) totalW else availW)
-                .fillMaxHeight()
-        ) {
-            cards.forEachIndexed { idx, card ->
-                HandCard(
-                    card          = card,
-                    idx           = idx,
-                    cardW         = cardW,
-                    cardH         = cardH,
-                    spacing       = spacing,
-                    isSelected    = card.id in selectedIds,
-                    isNewest      = card.id == newestCardId,
-                    onToggle      = onToggle,
-                    allSelectedIds = selectedIds,
-                    allCards      = cards,
-                    onDragStart   = onDragStart,
-                    onDragMove    = onDragMove,
-                    onDragEnd     = onDragEnd
-                )
-            }
-        } // inner width Box
-        } // scroll viewport Box
+    LazyRow(
+        modifier              = modifier.fillMaxHeight(),
+        horizontalArrangement = Arrangement.spacedBy((-18).dp),
+        contentPadding        = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+    ) {
+        itemsIndexed(cards, key = { _, c -> c.id }) { idx, card ->
+            HandCard(
+                card          = card,
+                idx           = idx,
+                isSelected    = card.id in selectedIds,
+                isNewest      = card.id == newestCardId,
+                onToggle      = onToggle,
+                allSelectedIds = selectedIds,
+                allCards      = cards,
+                onDragStart   = onDragStart,
+                onDragMove    = onDragMove,
+                onDragEnd     = onDragEnd
+            )
+        }
     }
 }

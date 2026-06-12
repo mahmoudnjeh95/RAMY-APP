@@ -1,7 +1,5 @@
 package com.rami.ui.components
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,8 +18,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -279,111 +275,58 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
     }
 }
 
-// ─── Joker content ─────────────────────────────────────────────────────────────
+// ─── Joker content — traditional jester design ────────────────────────────────
 
 @Composable
 private fun JokerContent(small: Boolean) {
-    // Always call composable (Rules of Compose), but only use value when full-size
-    val infiniteT = rememberInfiniteTransition(label = "joker_rot")
-    val rawRotation by infiniteT.animateFloat(
-        initialValue  = 0f,
-        targetValue   = 360f,
-        animationSpec = infiniteRepeatable(tween(6000, easing = LinearEasing)),
-        label         = "joker_r"
-    )
-    val rotation = if (!small) rawRotation else 0f
-
+    val red = Color(0xFFCC1111)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF6A0080).copy(alpha = 0.35f),
-                        Color(0xFF1A0030).copy(alpha = 0.70f)
-                    )
-                )
-            ),
+            .background(Brush.verticalGradient(listOf(Color(0xFFFFFDF7), Color(0xFFF0EBE0)))),
         contentAlignment = Alignment.Center
     ) {
-        // Radiating lines canvas
-        if (!small) {
-            Canvas(modifier = Modifier.fillMaxSize()) { drawJokerRays(rotation) }
+        // Top-left corner
+        Column(
+            modifier = Modifier.align(Alignment.TopStart).padding(3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("J",  color = red, fontSize = if (small) 12.sp else 14.sp, fontWeight = FontWeight.ExtraBold, lineHeight = if (small) 12.sp else 14.sp)
+            Text("★", color = red, fontSize = if (small) 9.sp  else 10.sp, lineHeight = if (small) 9.sp else 10.sp)
         }
 
-        // Center star + label
+        // Centre jester
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text       = "★",
-                fontSize   = if (small) 16.sp else 24.sp,
-                color      = Color(0xFFFFD700),
-                fontWeight = FontWeight.Bold,
-                modifier   = if (!small) Modifier.graphicsLayer { rotationZ = rotation * 0.4f } else Modifier
-            )
+            Text(text = "🃏", fontSize = if (small) 20.sp else 34.sp)
             if (!small) {
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text          = "JOKER",
-                    fontSize      = 8.sp,
+                    color         = red,
+                    fontSize      = 7.sp,
                     fontWeight    = FontWeight.ExtraBold,
-                    letterSpacing = 2.sp,
-                    color         = Color(0xFFE040FB)
+                    letterSpacing = 2.sp
                 )
             } else {
-                Text("JKR", fontSize = 7.sp, color = Color(0xFFE040FB), fontWeight = FontWeight.Bold)
+                Text("J", color = red, fontSize = 7.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        // Corner labels — suit symbols instead of plain stars
-        if (!small) {
-            Column(
-                modifier            = Modifier.align(Alignment.TopStart).padding(3.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("♦", fontSize = 8.sp, color = Color(0xFFD4AF37))
-                Text("♣", fontSize = 7.sp, color = Color(0xFFCE93D8))
-            }
-            Column(
-                modifier            = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(3.dp)
-                    .graphicsLayer { rotationZ = 180f },
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("♦", fontSize = 8.sp, color = Color(0xFFD4AF37))
-                Text("♣", fontSize = 7.sp, color = Color(0xFFCE93D8))
-            }
+        // Bottom-right corner (rotated)
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(3.dp)
+                .graphicsLayer { rotationZ = 180f },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("J",  color = red, fontSize = if (small) 12.sp else 14.sp, fontWeight = FontWeight.ExtraBold, lineHeight = if (small) 12.sp else 14.sp)
+            Text("★", color = red, fontSize = if (small) 9.sp  else 10.sp, lineHeight = if (small) 9.sp else 10.sp)
         }
     }
-}
-
-// ─── Joker radiating rays helper ──────────────────────────────────────────────
-
-private fun DrawScope.drawJokerRays(rotation: Float) {
-    val cx     = size.width / 2f
-    val cy     = size.height / 2f
-    val innerR = 14f * density
-    val outerR = 26f * density
-    val rays   = 12
-    repeat(rays) { i ->
-        val angle = (i.toDouble() / rays) * 2.0 * kotlin.math.PI + rotation.toDouble() * kotlin.math.PI / 180.0
-        val cosA  = kotlin.math.cos(angle).toFloat()
-        val sinA  = kotlin.math.sin(angle).toFloat()
-        drawLine(
-            color       = Color(0xFFD4AF37).copy(alpha = 0.35f),
-            start       = Offset(cx + cosA * innerR, cy + sinA * innerR),
-            end         = Offset(cx + cosA * outerR, cy + sinA * outerR),
-            strokeWidth = density
-        )
-    }
-    drawCircle(
-        color  = Color(0xFFD4AF37).copy(alpha = 0.20f),
-        radius = 26f * density,
-        center = Offset(cx, cy),
-        style  = Stroke(width = 0.8f * density)
-    )
 }
 
 // ─── Glow helper ──────────────────────────────────────────────────────────────
