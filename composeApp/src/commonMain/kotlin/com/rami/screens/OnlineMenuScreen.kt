@@ -60,6 +60,10 @@ fun OnlineMenuScreen(
                 onClick = { onNavigate(Screen.Tournaments) })
             OnlineMenuButton("👤", "ملفي", "My Profile — الإحصائيات والإنجازات",
                 onClick = { onNavigate(Screen.Profile) })
+            OnlineMenuButton("🎁", "المكافأة اليومية", "Daily Bonus — افتح مكافأة كل يوم",
+                onClick = { onNavigate(Screen.DailyReward) })
+            OnlineMenuButton("🛒", "المتجر", "Shop — عملات، جواهر، VIP، وكوزمتيكس",
+                onClick = { onNavigate(Screen.Shop) })
         }
     }
 }

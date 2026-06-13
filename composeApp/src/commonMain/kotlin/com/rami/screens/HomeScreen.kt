@@ -8,8 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,86 +32,137 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = Brush.verticalGradient(
-                        listOf(Color(0xFF060F0A), RamiColors.DarkGreen, Color(0xFF0D2818))
+                    brush = Brush.radialGradient(
+                        0.0f to Color(0xFF1B4332),
+                        0.6f to Color(0xFF0A2016),
+                        1.0f to Color(0xFF05100B)
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
-            // ── Layer 1: animated floating suit symbols ─────────────────────────
-            FloatingSuits()
-
-            // ── Layer 2: main content ───────────────────────────────────────────
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly,
+            // ── Layer 1: Ambient light glow ─────────────────────────────────────
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 12.dp)
+                    .drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                0f to RamiColors.Gold.copy(0.08f),
+                                1f to Color.Transparent
+                            ),
+                            radius = size.minDimension * 0.8f,
+                            center = Offset(size.width * 0.5f, size.height * 0.3f)
+                        )
+                    }
+            )
+
+            // ── Layer 2: floating suit symbols ─────────────────────────────────
+            FloatingSuits()
+
+            // ── Layer 3: main content ──────────────────────────────────────────
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 48.dp, horizontal = 32.dp)
             ) {
                 // Logo area
                 LogoHeader()
 
-                // Mode buttons
-                ModeButton(
-                    emoji     = "🌐",
-                    arabic    = "العب أونلاين",
-                    english   = "Play Online  •  Real Players",
-                    onClick   = { onNavigate(Screen.Auth) },
-                    highlight = true
-                )
-                ModeButton(
-                    emoji   = "🎴",
-                    arabic  = "عادي ضد الروبوت",
-                    english = "vs AI  •  Normal  •  51 pts min",
-                    onClick = { onNavigate(Screen.Lobby(GameMode.NORMAL)) }
-                )
-                ModeButton(
-                    emoji   = "⭐",
-                    arabic  = "تفضيل ضد الروبوت",
-                    english = "vs AI  •  Tafdhil  •  71 pts min",
-                    onClick = { onNavigate(Screen.Lobby(GameMode.TAFDHIL)) }
-                )
-
-                // Secondary row: Rules + Settings
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                // Actions Card
+                Surface(
+                    color = Color.White.copy(0.03f),
+                    shape = RoundedCornerShape(28.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.08f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
                 ) {
-                    OutlinedButton(
-                        onClick  = { onNavigate(Screen.Rules) },
-                        modifier = Modifier.weight(1f),
-                        shape    = RoundedCornerShape(14.dp),
-                        border   = androidx.compose.foundation.BorderStroke(
-                            1.dp, RamiColors.Gold.copy(alpha = 0.5f)
-                        ),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = RamiColors.TextLight
-                        )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        Text("📖  القواعد", fontSize = 13.sp)
-                    }
-                    OutlinedButton(
-                        onClick  = { /* TODO: settings */ },
-                        modifier = Modifier.weight(1f),
-                        shape    = RoundedCornerShape(14.dp),
-                        border   = androidx.compose.foundation.BorderStroke(
-                            1.dp, RamiColors.Gold.copy(alpha = 0.3f)
-                        ),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = RamiColors.TextLight.copy(alpha = 0.5f)
+                        ModeButton(
+                            emoji     = "🌍",
+                            arabic    = "لعب جماعي مباشر",
+                            english   = "Live Multiplayer",
+                            onClick   = { onNavigate(Screen.Auth) },
+                            highlight = true
                         )
-                    ) {
-                        Text("⚙️  إعدادات", fontSize = 13.sp)
+                        
+                        HorizontalDivider(color = Color.White.copy(0.05f), thickness = 1.dp, modifier = Modifier.padding(horizontal = 20.dp))
+                        
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            SmallModeButton(
+                                emoji = "🤖",
+                                label = "عادي",
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigate(Screen.Lobby(GameMode.NORMAL)) }
+                            )
+                            SmallModeButton(
+                                emoji = "⭐",
+                                label = "تفضيل",
+                                modifier = Modifier.weight(1f),
+                                onClick = { onNavigate(Screen.Lobby(GameMode.TAFDHIL)) }
+                            )
+                        }
                     }
                 }
 
-                Text(
-                    "v1.0  •  رامي تونسي",
-                    color    = RamiColors.TextLight.copy(alpha = 0.2f),
-                    fontSize = 10.sp
-                )
+                // Quick-access bottom bar
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        QuickNavButton("🏆", "البطولات",  { onNavigate(Screen.Auth) }, Modifier.weight(1f))
+                        QuickNavButton("📊", "الترتيب",   { onNavigate(Screen.Auth) }, Modifier.weight(1f))
+                        QuickNavButton("🎁", "المكافأة",   { onNavigate(Screen.Auth) }, Modifier.weight(1f))
+                        QuickNavButton("🛒", "المتجر",    { onNavigate(Screen.Auth) }, Modifier.weight(1f))
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically,
+                        modifier              = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(onClick = { onNavigate(Screen.Rules) }) {
+                            Text("📖 القواعد", color = RamiColors.TextLight.copy(0.4f), fontSize = 11.sp)
+                        }
+                        Text("رامي تونسي  •  v1.2", color = RamiColors.TextLight.copy(0.15f), fontSize = 10.sp)
+                        TextButton(onClick = { onNavigate(Screen.Privacy) }) {
+                            Text("🔏 الشروط", color = RamiColors.TextLight.copy(0.4f), fontSize = 11.sp)
+                        }
+                    }
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun SmallModeButton(
+    emoji: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(54.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.White.copy(0.05f),
+            contentColor = RamiColors.TextLight
+        ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.1f))
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(emoji, fontSize = 18.sp)
+            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -115,64 +171,70 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
 
 @Composable
 private fun LogoHeader() {
-    val pulse = rememberInfiniteTransition(label = "logo")
-    val scale by pulse.animateFloat(
-        initialValue  = 0.96f,
-        targetValue   = 1.04f,
+    val infiniteTransition = rememberInfiniteTransition(label = "logo")
+    val floatAnim by infiniteTransition.animateFloat(
+        initialValue = -8f,
+        targetValue = 8f,
         animationSpec = infiniteRepeatable(
-            animation  = tween(2200, easing = FastOutSlowInEasing),
+            animation = tween(3000, easing = EaseInOutSine),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "scale"
+        label = "float"
     )
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        // Card fan decoration
-        Row(
-            horizontalArrangement = Arrangement.spacedBy((-12).dp),
-            verticalAlignment     = Alignment.CenterVertically,
-            modifier              = Modifier.padding(bottom = 4.dp)
-        ) {
-            listOf(-14f, -7f, 0f, 7f, 14f).forEachIndexed { i, rot ->
-                Text(
-                    text     = "🃏",
-                    fontSize = (14 + i).sp,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.graphicsLayer { translationY = floatAnim }
+    ) {
+        // Decorative Fan
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.height(80.dp)) {
+            listOf(-25f, -12f, 0f, 12f, 25f).forEachIndexed { i, rot ->
+                Surface(
+                    color = Color.White,
+                    shape = RoundedCornerShape(4.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(0.1f)),
                     modifier = Modifier
-                        .graphicsLayer { rotationZ = rot; alpha = 0.55f + i * 0.09f }
-                )
+                        .size(40.dp, 60.dp)
+                        .graphicsLayer { 
+                            rotationZ = rot
+                            transformOrigin = TransformOrigin(0.5f, 1f)
+                            alpha = 0.6f + (i * 0.1f)
+                        }
+                        .shadow(4.dp)
+                ) {}
             }
+            Text("🃏", fontSize = 40.sp, modifier = Modifier.offset(y = (-10).dp))
         }
 
-        // Main title
-        Text(
-            text      = "رامي تونسي",
-            fontSize  = 34.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color     = RamiColors.Gold,
-            textAlign = TextAlign.Center,
-            modifier  = Modifier.graphicsLayer { scaleX = scale; scaleY = scale }
-        )
+        Spacer(Modifier.height(16.dp))
 
-        // Gold divider line
-        Spacer(
+        Text(
+            text = "RAMI",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Black,
+            color = Color.White,
+            letterSpacing = 8.sp,
+            modifier = Modifier.alpha(0.9f)
+        )
+        Text(
+            text = "TUNISIEN",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Light,
+            color = RamiColors.Gold,
+            letterSpacing = 4.sp
+        )
+        
+        Spacer(Modifier.height(8.dp))
+        
+        Box(
             modifier = Modifier
-                .padding(top = 6.dp, bottom = 2.dp)
-                .width(120.dp)
-                .height(1.5.dp)
-                .background(
-                    brush = Brush.horizontalGradient(
-                        listOf(Color.Transparent, RamiColors.Gold, Color.Transparent)
-                    )
-                )
-        )
-
-        Text(
-            text     = "Rami Tunisien",
-            fontSize = 14.sp,
-            color    = RamiColors.TextLight.copy(alpha = 0.5f)
+                .width(40.dp)
+                .height(3.dp)
+                .background(RamiColors.Gold, RoundedCornerShape(2.dp))
         )
     }
 }
+
 
 // ── Animated floating suit symbols ───────────────────────────────────────────
 
@@ -245,6 +307,24 @@ private fun FloatingSuits() {
         Text("♣", fontSize = 40.sp, color = Color.White.copy(alpha = a8),
              modifier = Modifier.offset(x = w * 0.73f, y = h * 0.62f)
                  .graphicsLayer { rotationZ = r8 })
+    }
+}
+
+// ── Quick nav button (icon + label for the bottom bar grid) ──────────────────
+
+@Composable
+private fun QuickNavButton(emoji: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    OutlinedButton(
+        onClick  = onClick,
+        modifier = modifier.height(52.dp),
+        shape    = RoundedCornerShape(14.dp),
+        border   = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.08f)),
+        colors   = ButtonDefaults.outlinedButtonColors(contentColor = RamiColors.TextLight)
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(emoji, fontSize = 15.sp)
+            Text(label, fontSize = 9.sp, color = RamiColors.TextLight.copy(0.55f))
+        }
     }
 }
 

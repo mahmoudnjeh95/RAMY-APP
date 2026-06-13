@@ -3,6 +3,7 @@ package com.rami.navigation
 import com.rami.model.GameMode
 
 sealed class Screen {
+    data object Splash       : Screen()
     data object Home         : Screen()
     data object Auth         : Screen()
     data object OnlineMenu   : Screen()
@@ -11,6 +12,10 @@ sealed class Screen {
     data object Profile      : Screen()
     data object Friends      : Screen()
     data object Tournaments  : Screen()
+    data object Shop         : Screen()
+    data object DailyReward  : Screen()
+    data object Privacy      : Screen()
+    data object Terms        : Screen()
     data class  Lobby(val mode: GameMode)        : Screen()
     data class  Matchmaking(val mode: GameMode)  : Screen()
     data class  OnlineGame(val roomId: String)   : Screen()

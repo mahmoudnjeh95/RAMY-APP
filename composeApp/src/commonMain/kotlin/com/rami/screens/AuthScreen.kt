@@ -129,19 +129,70 @@ fun AuthScreen(
 
                 HorizontalDivider(color = RamiColors.Gold.copy(alpha = 0.3f))
 
-                TextButton(onClick = {
-                    scope.launch {
-                        isLoading = true
-                        authService.signInAsGuest()
-                            .onSuccess { onSuccess() }
-                            .onFailure { errorMsg = it.message ?: "فشل" }
-                        isLoading = false
-                    }
-                }) {
-                    Text("دخول كضيف  •  Play as Guest",
-                        color = RamiColors.TextLight.copy(alpha = 0.6f), fontSize = 13.sp)
+                // Social login buttons
+                Text(
+                    "أو سجّل عبر  •  Or continue with",
+                    color    = RamiColors.TextLight.copy(0.4f),
+                    fontSize = 11.sp
+                )
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SocialButton(
+                        label    = "Google",
+                        emoji    = "🔴",
+                        modifier = Modifier.weight(1f),
+                        onClick  = {
+                            scope.launch {
+                                isLoading = true
+                                authService.signInWithGoogle()
+                                    .onSuccess { onSuccess() }
+                                    .onFailure { errorMsg = it.message ?: "فشل Google" }
+                                isLoading = false
+                            }
+                        }
+                    )
+                    SocialButton(
+                        label    = "Guest",
+                        emoji    = "👤",
+                        modifier = Modifier.weight(1f),
+                        onClick  = {
+                            scope.launch {
+                                isLoading = true
+                                authService.signInAsGuest()
+                                    .onSuccess { onSuccess() }
+                                    .onFailure { errorMsg = it.message ?: "فشل" }
+                                isLoading = false
+                            }
+                        }
+                    )
                 }
+
+                Text(
+                    "بالمتابعة، أنت توافق على شروط الخدمة وسياسة الخصوصية",
+                    color     = RamiColors.TextLight.copy(0.25f),
+                    fontSize  = 9.sp,
+                    textAlign = TextAlign.Center
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun SocialButton(label: String, emoji: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick  = onClick,
+        modifier = modifier.height(48.dp),
+        shape    = RoundedCornerShape(14.dp),
+        border   = androidx.compose.foundation.BorderStroke(1.dp, RamiColors.Gold.copy(0.3f)),
+        colors   = ButtonDefaults.outlinedButtonColors(contentColor = RamiColors.TextLight)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(emoji, fontSize = 16.sp)
+            Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

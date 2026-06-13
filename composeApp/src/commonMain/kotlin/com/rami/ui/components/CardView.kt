@@ -50,52 +50,65 @@ fun CardView(
 ) {
     val width  = if (small) CardSize.SmallWidth  else CardSize.Width
     val height = if (small) CardSize.SmallHeight else CardSize.Height
-    val radius = if (small) 7.dp else 10.dp
+    val radius = if (small) 6.dp else 9.dp
     val shape  = RoundedCornerShape(radius)
 
     // Press interaction for scale feedback
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val animatedScale by animateFloatAsState(if (isPressed) 0.96f else 1f, label = "scale")
 
     // Gold glow color for selected state
-    val glowColor = RamiColors.Gold.copy(alpha = if (selected) 0.8f else 0f)
+    val glowColor = RamiColors.Gold.copy(alpha = if (selected) 0.85f else 0f)
 
     val baseModifier = modifier
         .width(width)
         .height(height)
-        // Directional cast shadow (offset downward) + selection glow
+        .graphicsLayer {
+            scaleX = animatedScale
+            scaleY = animatedScale
+        }
+        // Directional cast shadow + selection glow
         .drawBehind {
-            if (selected) drawGlow(glowColor, radius.toPx(), 14.dp.toPx())
-            // Subtle elliptical cast shadow below card
-            val shadowAlpha = if (isPressed) 0.08f else 0.18f
+            if (selected) drawGlow(glowColor, radius.toPx(), 16.dp.toPx())
+            
+            // Subtle elliptical shadow for "floating" effect
+            val shadowAlpha = if (isPressed) 0.12f else 0.22f
             drawOval(
                 color   = Color.Black.copy(alpha = shadowAlpha),
-                topLeft = Offset(-3.dp.toPx(), size.height - 3.dp.toPx()),
-                size    = Size(size.width + 6.dp.toPx(), 7.dp.toPx())
+                topLeft = Offset(-2.dp.toPx(), size.height - 2.dp.toPx()),
+                size    = Size(size.width + 4.dp.toPx(), 6.dp.toPx())
             )
         }
         .shadow(
-            elevation       = when { selected -> 10.dp; isPressed -> 1.dp; else -> 4.dp },
+            elevation       = when { selected -> 12.dp; isPressed -> 2.dp; else -> 5.dp },
             shape           = shape,
-            ambientColor    = if (selected) RamiColors.Gold.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.25f),
-            spotColor       = if (selected) RamiColors.Gold.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.40f)
+            ambientColor    = if (selected) RamiColors.Gold.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.3f),
+            spotColor       = if (selected) RamiColors.Gold.copy(alpha = 0.7f) else Color.Black.copy(alpha = 0.45f)
         )
         .clip(shape)
-        .background(if (faceDown) RamiColors.FeltGreen else Color.Transparent)
-        // Card face gradient
+        .background(if (faceDown) RamiColors.DarkGreen else Color.Transparent)
+        // Card face with premium "ivory/linen" look
         .then(
-            if (!faceDown) Modifier.background(
-                brush = Brush.verticalGradient(
-                    listOf(Color(0xFFFFFDF7), Color(0xFFF5F0E8))
+            if (!faceDown) Modifier
+                .background(
+                    brush = Brush.verticalGradient(
+                        0.0f to Color(0xFFFFFFFF),
+                        0.7f to Color(0xFFF9F6F0),
+                        1.0f to Color(0xFFF0EAE0)
+                    )
                 )
-            ) else Modifier
+                .drawBehind {
+                    drawCardTexture() // Linen/Paper texture
+                }
+            else Modifier
         )
         .border(
-            width = if (selected) 2.dp else 0.8.dp,
+            width = if (selected) 2.2.dp else 0.8.dp,
             color = when {
                 selected -> RamiColors.Gold
-                faceDown -> Color.White.copy(alpha = 0.15f)
-                else     -> Color(0xFFCCCCCC)
+                faceDown -> Color.White.copy(alpha = 0.2f)
+                else     -> Color(0xFFDED9D0)
             },
             shape = shape
         )
@@ -116,6 +129,24 @@ fun CardView(
     }
 }
 
+private fun DrawScope.drawCardTexture() {
+    // Subtle linen-like grain
+    val color = Color.Black.copy(alpha = 0.03f)
+    val step = 2.dp.toPx()
+    // Vertical lines
+    var x = 0f
+    while (x < size.width) {
+        drawLine(color, Offset(x, 0f), Offset(x, size.height), 0.5f)
+        x += step
+    }
+    // Horizontal lines
+    var y = 0f
+    while (y < size.height) {
+        drawLine(color, Offset(0f, y), Offset(size.width, y), 0.5f)
+        y += step
+    }
+}
+
 // ─── Card back ────────────────────────────────────────────────────────────────
 
 @Composable
@@ -124,51 +155,62 @@ private fun CardBack() {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.linearGradient(
-                    listOf(Color(0xFF1A3A5C), Color(0xFF0D2137))
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0xFF2E5A88), Color(0xFF132A42)),
+                    center = Offset.Unspecified,
+                    radius = Float.POSITIVE_INFINITY
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Geometric diamond pattern drawn with Canvas
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(5.dp)
-                .drawBehind { drawCardBackPattern() }
-                .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(5.dp))
-        )
-        // Centre logo
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("♦", color = Color(0xFFD4AF37), fontSize = 20.sp)
-            Text("R", color = Color(0xFFD4AF37), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Canvas(modifier = Modifier.fillMaxSize().padding(6.dp)) {
+            // Intricate border
+            drawRoundRect(
+                color = Color.White.copy(0.15f),
+                style = Stroke(width = 1.5.dp.toPx()),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
+            )
+            
+            // Intricate fill pattern
+            drawCardBackPattern()
+        }
+        
+        // Centre Emblem
+        Surface(
+            color = Color.Transparent,
+            shape = RoundedCornerShape(4.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37).copy(0.4f)),
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("♦", color = Color(0xFFD4AF37), fontSize = 24.sp)
+                Text("RAMI", color = Color(0xFFD4AF37), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+            }
         }
     }
 }
 
 private fun DrawScope.drawCardBackPattern() {
-    val spacing = 14.dp.toPx()
-    val dotR    = 1.5.dp.toPx()
-    val color   = Color.White.copy(alpha = 0.12f)
-    var x = 0f
-    while (x < size.width) {
-        var y = 0f
-        while (y < size.height) {
-            drawCircle(color, dotR, center = Offset(x, y))
-            y += spacing
-        }
-        x += spacing
+    val step = 10.dp.toPx()
+    val color = Color.White.copy(alpha = 0.08f)
+    // Diamond lattice
+    for (i in -10..20) {
+        val offset = i * step
+        drawLine(color, Offset(offset, 0f), Offset(offset + size.height, size.height), 1f)
+        drawLine(color, Offset(offset, size.height), Offset(offset + size.height, 0f), 1f)
     }
-    // Diagonal cross-lines
-    val lineColor = Color.White.copy(alpha = 0.06f)
-    var i = -size.height
-    while (i < size.width) {
-        drawLine(lineColor,
-            start = Offset(i, 0f),
-            end   = Offset(i + size.height, size.height),
-            strokeWidth = 1.dp.toPx()
-        )
-        i += spacing
+    
+    // Tiny dots at intersections
+    val dotColor = Color.White.copy(0.12f)
+    for (ix in 0..10) {
+        for (iy in 0..15) {
+            val px = ix * step
+            val py = iy * step
+            drawCircle(dotColor, 1.dp.toPx(), center = Offset(px, py))
+        }
     }
 }
 
@@ -178,39 +220,30 @@ private fun DrawScope.drawCardBackPattern() {
 private fun RegularContent(card: Card.Regular, small: Boolean) {
     val suitColor = when (card.suit) {
         Suit.HEARTS, Suit.DIAMONDS -> Color(0xFFCC1111)
-        Suit.CLUBS,  Suit.SPADES   -> Color(0xFF111111)
+        Suit.CLUBS,  Suit.SPADES   -> Color(0xFF1A1A1A)
     }
-    val rankFontSize = if (small) 13.sp else 16.sp
-    val suitFontSize = if (small) 11.sp else 14.sp
-    val centerSize   = if (small) 18.sp else 24.sp
-    val pad          = if (small) 3.dp  else 5.dp
+    val rankFontSize = if (small) 14.sp else 18.sp
+    val suitFontSize = if (small) 12.sp else 15.sp
+    val centerSize   = if (small) 22.sp else 36.sp
+    val pad          = if (small) 4.dp  else 6.dp
 
     val isFaceCard = card.rank in listOf(Rank.JACK, Rank.QUEEN, Rank.KING)
-    val faceEmoji  = when (card.rank) {
-        Rank.JACK  -> "🃎"
-        Rank.QUEEN -> "🃍"
-        Rank.KING  -> "🃑"
-        else       -> null
-    }
     val faceAccent = when (card.rank) {
-        Rank.JACK  -> Color(0xFF1565C0)
-        Rank.QUEEN -> Color(0xFF880E4F)
-        Rank.KING  -> Color(0xFF4A148C)
+        Rank.JACK  -> Color(0xFF1E4D8C)
+        Rank.QUEEN -> Color(0xFF9C235A)
+        Rank.KING  -> Color(0xFF5A2A8C)
         else       -> suitColor
     }
 
     Box(Modifier.fillMaxSize()) {
-        // Face card color band at top
-        if (isFaceCard) {
+        // Sophisticated background for face cards
+        if (isFaceCard && !small) {
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.28f)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            listOf(faceAccent.copy(alpha = 0.18f), Color.Transparent)
-                        )
-                    )
+                    .fillMaxSize()
+                    .padding(8.dp)
+                    .border(0.5.dp, faceAccent.copy(0.2f), RoundedCornerShape(4.dp))
+                    .background(faceAccent.copy(alpha = 0.04f))
             )
         }
 
@@ -220,12 +253,12 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             // ── Top-left corner ────────────────────────────────────────────────
-            Column(horizontalAlignment = Alignment.Start) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text       = card.rank.display,
                     color      = if (isFaceCard) faceAccent else suitColor,
                     fontSize   = rankFontSize,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     lineHeight = rankFontSize
                 )
                 Text(
@@ -237,9 +270,22 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
             }
 
             // ── Centre ─────────────────────────────────────────────────────────
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                if (faceEmoji != null && !small) {
-                    Text(faceEmoji, fontSize = centerSize)
+            Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+                if (isFaceCard && !small) {
+                    // Larger, more artistic suit symbol with accent
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text     = card.suit.symbol,
+                            color    = faceAccent.copy(alpha = 0.1f),
+                            fontSize = 60.sp
+                        )
+                        Text(
+                            text     = card.rank.display,
+                            color    = faceAccent,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
                 } else {
                     Text(
                         text     = card.suit.symbol,
@@ -252,7 +298,7 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
 
             // ── Bottom-right corner (rotated 180°) ─────────────────────────────
             Column(
-                horizontalAlignment = Alignment.End,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .fillMaxWidth()
                     .graphicsLayer { rotationZ = 180f }
@@ -261,7 +307,7 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
                     text       = card.rank.display,
                     color      = if (isFaceCard) faceAccent else suitColor,
                     fontSize   = rankFontSize,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Black,
                     lineHeight = rankFontSize
                 )
                 Text(
@@ -274,6 +320,7 @@ private fun RegularContent(card: Card.Regular, small: Boolean) {
         }
     }
 }
+
 
 // ─── Joker content — traditional jester design ────────────────────────────────
 

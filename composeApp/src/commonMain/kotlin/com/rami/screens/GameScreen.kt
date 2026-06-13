@@ -635,8 +635,8 @@ private fun OpponentPanel(
 ) {
     val glowAlpha by if (isCurrent) {
         rememberInfiniteTransition(label = "glow").animateFloat(
-            0.15f, 0.5f,
-            infiniteRepeatable(tween(900), RepeatMode.Reverse),
+            0.1f, 0.4f,
+            infiniteRepeatable(tween(1000, easing = EaseInOutSine), RepeatMode.Reverse),
             label = "g"
         )
     } else remember { mutableStateOf(0f) }
@@ -649,69 +649,102 @@ private fun OpponentPanel(
         label         = "score_${player.id}"
     )
 
-    Column(
+    Surface(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(10.dp))
-            .background(
-                if (isCurrent) RamiColors.Gold.copy(alpha = glowAlpha)
-                else Color.Transparent
-            )
-            .border(
-                width = if (isCurrent) 1.5.dp else 0.5.dp,
-                color = if (isCurrent) RamiColors.Gold else RamiColors.TextLight.copy(0.15f),
-                shape = RoundedCornerShape(10.dp)
-            )
-            .padding(6.dp)
             .alpha(thinkAlpha),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+        shape = RoundedCornerShape(12.dp),
+        color = if (isCurrent) Color.White.copy(0.05f) else Color.Transparent,
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (isCurrent) 1.5.dp else 1.dp,
+            color = if (isCurrent) RamiColors.Gold.copy(0.8f) else Color.White.copy(0.1f)
+        ),
+        shadowElevation = if (isCurrent) 8.dp else 0.dp
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment     = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(6.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (isCurrent) {
-                Box(contentAlignment = Alignment.Center) {
-                    TurnTimerArc(progress = timerProg, modifier = Modifier.size(20.dp))
-                    Text("▶", color = RamiColors.Gold, fontSize = 8.sp)
+            // Header: Name + Timer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(24.dp)) {
+                    if (isCurrent) {
+                        TurnTimerArc(progress = timerProg, modifier = Modifier.fillMaxSize())
+                        Text("⏳", fontSize = 10.sp)
+                    } else {
+                        Text(if (player.isAI) "🤖" else "👤", fontSize = 12.sp)
+                    }
+                }
+                
+                Text(
+                    player.name,
+                    color = if (isCurrent) Color.White else RamiColors.TextLight.copy(0.7f),
+                    fontSize = 11.sp,
+                    fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Medium,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                    textAlign = TextAlign.Start
+                )
+
+                if (player.hasLaidDown) {
+                    Surface(
+                        color = RamiColors.Gold.copy(0.2f),
+                        shape = CircleShape,
+                        modifier = Modifier.size(14.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("✓", color = RamiColors.Gold, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
-            Text(
-                if (player.isAI) "🤖 ${player.name}" else "👤 ${player.name}",
-                color      = if (isCurrent) RamiColors.Gold else RamiColors.TextLight,
-                fontSize   = 11.sp,
-                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
-                maxLines   = 1
-            )
-            Box {
-                Text(
-                    "${animScore}pts",
-                    color    = RamiColors.TextLight.copy(0.55f),
-                    fontSize = 9.sp
-                )
-                ScoreDelta(
-                    score    = player.score,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-            }
-            if (player.hasLaidDown) Text("✓", color = RamiColors.LightGold, fontSize = 9.sp)
-        }
 
-        FaceDownHand(count = player.handSize, modifier = Modifier.weight(1f).fillMaxWidth())
-
-        if (formations.isNotEmpty()) {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth()
+            // Cards visualization
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                contentAlignment = Alignment.Center
             ) {
-                itemsIndexed(formations, key = { _, f -> f.id }) { _, f ->
-                    MiniFormationView(formation = f, mode = mode)
+                FaceDownHand(count = player.handSize)
+                
+                // Score Badge overlay
+                Surface(
+                    color = Color.Black.copy(0.4f),
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.align(Alignment.BottomEnd)
+                ) {
+                    Text(
+                        "${animScore} pts",
+                        color = RamiColors.Gold,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            // Formations row (mini)
+            if (formations.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    itemsIndexed(formations, key = { _, f -> f.id }) { _, f ->
+                        MiniFormationView(formation = f, mode = mode)
+                    }
                 }
             }
         }
     }
 }
+
 
 // ─── Turn timer arc ───────────────────────────────────────────────────────────
 
@@ -781,59 +814,60 @@ private fun DiscardFan(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.Black.copy(0.15f))
             .border(
                 1.5.dp,
-                if (enabled) RamiColors.Gold else RamiColors.Gold.copy(0.2f),
-                RoundedCornerShape(10.dp)
+                if (enabled) RamiColors.Gold else Color.White.copy(0.05f),
+                RoundedCornerShape(12.dp)
             )
             .clickable(enabled = enabled, onClick = onClick)
             .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            if (discardPile.isEmpty()) {
-                Text(
-                    "المرمى\nفارغ",
-                    color     = RamiColors.TextLight.copy(0.3f),
-                    fontSize  = 11.sp,
-                    textAlign = TextAlign.Center
-                )
-            } else {
-                // Show top card prominently with subtle stack depth below
-                if (discardPile.size > 2) {
-                    Box(
-                        Modifier.offset(x = 4.dp, y = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.Black.copy(0.25f))
-                            .size(CardSize.Width, CardSize.Height)
-                    )
-                }
-                if (discardPile.size > 1) {
-                    Box(
-                        Modifier.offset(x = 2.dp, y = 2.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.Black.copy(0.15f))
-                            .size(CardSize.Width, CardSize.Height)
-                    )
-                }
-                CardView(card = discardPile.last())
-            }
-        }
-        Spacer(Modifier.height(2.dp))
-        if (enabled) {
+        if (discardPile.isEmpty()) {
             Text(
-                "اسحب من المرمى",
-                color      = RamiColors.Gold.copy(0.8f),
-                fontSize   = 9.sp,
+                "المرمى فارغ",
+                color = Color.White.copy(0.2f),
+                fontSize = 11.sp,
+                textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
             )
+        } else {
+            // Visual stack representation
+            val topCards = discardPile.takeLast(3)
+            Box(contentAlignment = Alignment.Center) {
+                topCards.forEachIndexed { i, card ->
+                    val rot = (i - topCards.size / 2) * 5f
+                    val offX = (i - topCards.size / 2) * 4.dp
+                    CardView(
+                        card = card,
+                        small = true,
+                        modifier = Modifier
+                            .offset(x = offX)
+                            .graphicsLayer { rotationZ = rot }
+                    )
+                }
+            }
+        }
+        
+        if (enabled) {
+            Surface(
+                color = RamiColors.Gold,
+                shape = RoundedCornerShape(topStart = 12.dp, bottomEnd = 12.dp),
+                modifier = Modifier.align(Alignment.BottomEnd)
+            ) {
+                Text(
+                    "سحب",
+                    color = Color.Black,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
         }
     }
 }
@@ -847,59 +881,71 @@ private fun DeckPile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Pulsing gold glow — always run animation, just return 0 when not draw phase
-    val deckPulse = rememberInfiniteTransition(label = "deck_glow")
-    val rawGlow by deckPulse.animateFloat(
-        initialValue  = 0.25f,
-        targetValue   = 0.80f,
-        animationSpec = infiniteRepeatable(
-            animation  = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "deck_ga"
+    val infiniteTransition = rememberInfiniteTransition(label = "deck")
+    val glow by infiniteTransition.animateFloat(
+        0.1f, 0.6f,
+        infiniteRepeatable(tween(1200, easing = EaseInOutSine), RepeatMode.Reverse),
+        label = "glow"
     )
-    val glowAlpha = if (enabled) rawGlow else 0f
 
-    Column(
-        modifier            = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .drawBehind {
-                    if (enabled && glowAlpha > 0f) {
-                        drawRoundRect(
-                            color        = RamiColors.Gold.copy(alpha = glowAlpha * 0.4f),
-                            cornerRadius = CornerRadius(10.dp.toPx()),
-                            blendMode    = BlendMode.SrcOver
-                        )
-                    }
-                }
-                .clip(RoundedCornerShape(10.dp))
-                .background(Brush.linearGradient(listOf(Color(0xFF1A3A5C), Color(0xFF0D2137))))
-                .border(
-                    width = if (enabled) 2.dp else 1.5.dp,
-                    color = if (enabled) RamiColors.Gold.copy(glowAlpha) else Color.Gray.copy(0.3f),
-                    shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                brush = Brush.verticalGradient(
+                    listOf(Color(0xFF2E5A88), Color(0xFF132A42))
                 )
-                .clickable(enabled = enabled, onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("♦", color = Color(0xFFD4AF37), fontSize = 22.sp)
-                Text("R",  color = Color(0xFFD4AF37), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(4.dp))
-                Text("$deckSize 🃏", color = Color.White.copy(0.5f), fontSize = 9.sp)
+            )
+            .border(
+                width = if (enabled) 2.dp else 1.dp,
+                color = if (enabled) RamiColors.Gold.copy(glow) else Color.White.copy(0.1f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        // Deck pattern
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val step = 8.dp.toPx()
+            for (i in 0..10) {
+                drawLine(
+                    color = Color.White.copy(0.05f),
+                    start = Offset(0f, i * step),
+                    end = Offset(size.width, i * step),
+                    strokeWidth = 1f
+                )
             }
         }
-        Spacer(Modifier.height(2.dp))
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("🃏", fontSize = 24.sp)
+            Text(
+                "$deckSize",
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Black
+            )
+        }
+
         if (enabled) {
-            Text("اسحب من الورق", color = RamiColors.Gold, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            Surface(
+                color = RamiColors.Gold,
+                shape = RoundedCornerShape(topStart = 12.dp, bottomEnd = 12.dp),
+                modifier = Modifier.align(Alignment.BottomEnd)
+            ) {
+                Text(
+                    "سحب",
+                    color = Color.Black,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
         }
     }
 }
+
 
 // ─── Nazoul drop zone (appears during drag) ───────────────────────────────────
 

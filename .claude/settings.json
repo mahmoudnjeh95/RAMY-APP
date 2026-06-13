@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :composeApp:compileDebugKotlin)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; cd \"d:\\\\Mahmoud_game\\\\RAMY-APP\"; .\\\\gradlew.bat :composeApp:compileDebugKotlin 2>&1 | Select-Object -Last 80)",
+      "Read(//c/Program Files/**)",
+      "Read(//c//**)",
+      "Read(//d//**)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\mahmoudn\\\\AppData\\\\Local\\\\Android\\\\Sdk\" -Directory | Select-Object Name; $studioPath = \"C:\\\\Program Files\\\\Android\\\\Android Studio\"; if \\(Test-Path $studioPath\\) { Get-ChildItem \"$studioPath\\\\jbr\" -Directory -ErrorAction SilentlyContinue | Select-Object FullName })",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; cd \"d:\\\\Mahmoud_game\\\\RAMY-APP\"; .\\\\gradlew.bat :composeApp:compileDebugKotlin 2>&1 | Select-Object -Last 80)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; cd \"d:\\\\Mahmoud_game\\\\RAMY-APP\"; .\\\\gradlew.bat :composeApp:compileCommonMainKotlinMetadata 2>&1 | Select-Object -Last 50)",
+      "PowerShell($f = \"C:\\\\Users\\\\mahmoudn\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Mahmoud-game-RAMY-APP\\\\cf0703d0-0d52-4c11-be39-4937e10183f4\\\\tasks\\\\bxf7t0j4e.output\"; \\(Get-Item $f\\).Length; Get-Content $f -Tail 10)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr\"; $env:PATH = \"$env:JAVA_HOME\\\\bin;$env:PATH\"; cd \"d:\\\\Mahmoud_game\\\\RAMY-APP\"; .\\\\gradlew.bat :composeApp:compileDebugKotlinAndroid -x processDebugGoogleServices --continue 2>&1 | Select-Object -Last 60)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}
