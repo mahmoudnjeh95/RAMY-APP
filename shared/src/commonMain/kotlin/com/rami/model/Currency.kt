@@ -96,14 +96,15 @@ object ShopCatalogue {
     )
 
     val avatarPacks = listOf(
-        CosmeticItem("ava_default",   "الافتراضي",  "Default",      "👤", priceCoin = 0,     isOwned = true),
-        CosmeticItem("ava_lion",      "الأسد",      "Lion",         "🦁", priceCoin = 3_000),
-        CosmeticItem("ava_eagle",     "النسر",      "Eagle",        "🦅", priceCoin = 3_000),
-        CosmeticItem("ava_fox",       "الثعلب",     "Fox",          "🦊", priceCoin = 3_000),
-        CosmeticItem("ava_wolf",      "الذئب",      "Wolf",         "🐺", priceGems = 30),
-        CosmeticItem("ava_tiger",     "النمر",      "Tiger",        "🐯", priceGems = 30),
-        CosmeticItem("ava_dragon",    "التنين",     "Dragon",       "🐉", priceGems = 80,  requiredVip = VipTier.SILVER),
-        CosmeticItem("ava_crown",     "التاج",      "Crown",        "👑", priceGems = 150, requiredVip = VipTier.GOLD)
+        CosmeticItem("ava_default", "الافتراضي", "Default", "👤", priceCoin = 0,     isOwned = true),
+        CosmeticItem("ava_p1",      "ياسين",    "Yassine", "🧑", priceCoin = 2_000),
+        CosmeticItem("ava_p2",      "سامي",     "Sami",    "🧑", priceCoin = 2_000),
+        CosmeticItem("ava_p3",      "سارة",     "Sarah",   "👩", priceCoin = 2_000),
+        CosmeticItem("ava_p4",      "ليلى",     "Layla",   "👩", priceCoin = 2_000),
+        CosmeticItem("ava_p5",      "نور",      "Nour",    "👩", priceCoin = 2_000),
+        CosmeticItem("ava_p6",      "كريم",     "Karim",   "🧑", priceCoin = 2_000),
+        CosmeticItem("ava_dragon",  "التنين",   "Dragon",  "🐉", priceGems = 80,  requiredVip = VipTier.SILVER),
+        CosmeticItem("ava_crown",   "التاج",    "Crown",   "👑", priceGems = 150, requiredVip = VipTier.GOLD)
     )
 }
 

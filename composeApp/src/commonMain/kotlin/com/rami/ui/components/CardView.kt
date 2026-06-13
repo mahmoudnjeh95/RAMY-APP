@@ -1,5 +1,6 @@
 package com.rami.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.ContentScale
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.card_back
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -151,67 +156,12 @@ private fun DrawScope.drawCardTexture() {
 
 @Composable
 private fun CardBack() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(Color(0xFF2E5A88), Color(0xFF132A42)),
-                    center = Offset.Unspecified,
-                    radius = Float.POSITIVE_INFINITY
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize().padding(6.dp)) {
-            // Intricate border
-            drawRoundRect(
-                color = Color.White.copy(0.15f),
-                style = Stroke(width = 1.5.dp.toPx()),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx())
-            )
-            
-            // Intricate fill pattern
-            drawCardBackPattern()
-        }
-        
-        // Centre Emblem
-        Surface(
-            color = Color.Transparent,
-            shape = RoundedCornerShape(4.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD4AF37).copy(0.4f)),
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("♦", color = Color(0xFFD4AF37), fontSize = 24.sp)
-                Text("RAMI", color = Color(0xFFD4AF37), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
-            }
-        }
-    }
-}
-
-private fun DrawScope.drawCardBackPattern() {
-    val step = 10.dp.toPx()
-    val color = Color.White.copy(alpha = 0.08f)
-    // Diamond lattice
-    for (i in -10..20) {
-        val offset = i * step
-        drawLine(color, Offset(offset, 0f), Offset(offset + size.height, size.height), 1f)
-        drawLine(color, Offset(offset, size.height), Offset(offset + size.height, 0f), 1f)
-    }
-    
-    // Tiny dots at intersections
-    val dotColor = Color.White.copy(0.12f)
-    for (ix in 0..10) {
-        for (iy in 0..15) {
-            val px = ix * step
-            val py = iy * step
-            drawCircle(dotColor, 1.dp.toPx(), center = Offset(px, py))
-        }
-    }
+    Image(
+        painter      = painterResource(Res.drawable.card_back),
+        contentDescription = null,
+        modifier     = Modifier.fillMaxSize(),
+        contentScale = ContentScale.FillBounds
+    )
 }
 
 // ─── Regular card content ─────────────────────────────────────────────────────

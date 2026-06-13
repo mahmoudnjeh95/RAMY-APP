@@ -1,6 +1,7 @@
 package com.rami.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -17,10 +18,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.chest_icon
 import com.rami.model.DailyRewards
 import com.rami.model.RewardType
 import com.rami.ui.theme.RamiColors
 import com.rami.ui.theme.RamiTheme
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 fun DailyRewardScreen(
@@ -253,12 +258,19 @@ private fun AnimatedChest(claimed: Boolean) {
         infiniteRepeatable(tween(1200), RepeatMode.Reverse),
         label = "cg"
     )
-    Text(
-        text     = if (claimed) "🔒" else "🎁",
-        fontSize = 64.sp,
-        modifier = Modifier.graphicsLayer {
-            translationY    = bounce
-            shadowElevation = 40f * glow
-        }
-    )
+    if (claimed) {
+        Text("🔒", fontSize = 64.sp)
+    } else {
+        Image(
+            painter            = painterResource(Res.drawable.chest_icon),
+            contentDescription = null,
+            modifier           = Modifier
+                .size(100.dp)
+                .graphicsLayer {
+                    translationY    = bounce
+                    shadowElevation = 40f * glow
+                },
+            contentScale = ContentScale.Fit
+        )
+    }
 }

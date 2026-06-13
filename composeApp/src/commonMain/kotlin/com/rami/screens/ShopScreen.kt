@@ -15,8 +15,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.coin_icon
+import com.rami.generated.resources.gem_icon
+import com.rami.generated.resources.avatar_1
+import com.rami.generated.resources.avatar_2
+import com.rami.generated.resources.avatar_3
+import com.rami.generated.resources.avatar_4
+import com.rami.generated.resources.avatar_5
+import com.rami.generated.resources.avatar_6
+import com.rami.generated.resources.slot_machine
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -94,9 +109,25 @@ private fun ShopTopBar(balance: CurrencyBalance, vipTier: VipTier, onBack: () ->
             if (vipTier != VipTier.NONE) {
                 Text(vipTier.badge, fontSize = 16.sp)
             }
-            CurrencyBadge("🪙", "${formatCoins(balance.coins)}")
-            CurrencyBadge("💎", "${balance.gems}")
+            ImageCurrencyBadge(Res.drawable.coin_icon, "${formatCoins(balance.coins)}")
+            ImageCurrencyBadge(Res.drawable.gem_icon,  "${balance.gems}")
         }
+    }
+}
+
+@Composable
+private fun ImageCurrencyBadge(iconRes: org.jetbrains.compose.resources.DrawableResource, amount: String) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(RamiColors.Gold.copy(0.12f))
+            .border(1.dp, RamiColors.Gold.copy(0.3f), RoundedCornerShape(20.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Image(painterResource(iconRes), null, Modifier.size(18.dp), contentScale = ContentScale.Fit)
+        Text(amount, color = RamiColors.Gold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -170,6 +201,17 @@ private fun CoinsTab(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Hero image
+        Image(
+            painter      = painterResource(Res.drawable.slot_machine),
+            contentDescription = null,
+            modifier     = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Crop
+        )
+
         // Free coins via ad
         FreeAdBanner(
             emoji       = "📺",
@@ -479,7 +521,7 @@ private fun CosmeticCard(item: CosmeticItem, playerVip: VipTier, onBuy: () -> Un
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(if (locked) "🔒" else item.emoji, fontSize = 28.sp)
+            CosmeticIcon(item = item, locked = locked)
             Text(
                 item.nameAr,
                 color     = if (locked) RamiColors.TextLight.copy(0.3f) else RamiColors.TextLight,
@@ -499,6 +541,22 @@ private fun CosmeticCard(item: CosmeticItem, playerVip: VipTier, onBuy: () -> Un
                 else -> Text("🪙 ${formatCoins(item.priceCoin)}", color = RamiColors.Gold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
+    }
+}
+
+// ── Avatar / emoji icon helper ────────────────────────────────────────────────
+
+@Composable
+private fun CosmeticIcon(item: CosmeticItem, locked: Boolean) {
+    if (locked) { Text("🔒", fontSize = 28.sp); return }
+    when (item.id) {
+        "ava_p1" -> Image(painterResource(Res.drawable.avatar_1), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        "ava_p2" -> Image(painterResource(Res.drawable.avatar_2), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        "ava_p3" -> Image(painterResource(Res.drawable.avatar_3), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        "ava_p4" -> Image(painterResource(Res.drawable.avatar_4), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        "ava_p5" -> Image(painterResource(Res.drawable.avatar_5), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        "ava_p6" -> Image(painterResource(Res.drawable.avatar_6), null, Modifier.size(48.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+        else     -> Text(item.emoji, fontSize = 28.sp)
     }
 }
 

@@ -38,11 +38,16 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import com.rami.engine.GameEngine
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.table_bg
 import com.rami.model.*
 import com.rami.ui.components.*
 import com.rami.ui.theme.RamiColors
 import com.rami.ui.theme.RamiTheme
+import org.jetbrains.compose.resources.painterResource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -200,12 +205,16 @@ fun GameScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFF0D2E1A), RamiColors.FeltGreen, Color(0xFF1B4332))
-                        )
-                    )
             ) {
+                // Photorealistic table background
+                Image(
+                    painter      = painterResource(Res.drawable.table_bg),
+                    contentDescription = null,
+                    modifier     = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // Darkening overlay for UI readability
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(0.22f)))
                 // Ambient felt texture overlay
                 TableTexture(modifier = Modifier.fillMaxSize())
                 Column(modifier = Modifier.fillMaxSize()) {

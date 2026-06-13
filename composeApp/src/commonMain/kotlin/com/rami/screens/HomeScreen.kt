@@ -8,14 +8,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import com.rami.generated.resources.Res
+import com.rami.generated.resources.*
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,60 +73,26 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
                 // Logo area
                 LogoHeader()
 
-                // Actions Card
-                Surface(
-                    color = Color.White.copy(0.03f),
-                    shape = RoundedCornerShape(28.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.08f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        ModeButton(
-                            emoji     = "🌍",
-                            arabic    = "لعب جماعي مباشر",
-                            english   = "Live Multiplayer",
-                            onClick   = { onNavigate(Screen.Auth) },
-                            highlight = true
-                        )
-                        
-                        HorizontalDivider(color = Color.White.copy(0.05f), thickness = 1.dp, modifier = Modifier.padding(horizontal = 20.dp))
-                        
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            SmallModeButton(
-                                emoji = "🤖",
-                                label = "عادي",
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigate(Screen.Lobby(GameMode.NORMAL)) }
-                            )
-                            SmallModeButton(
-                                emoji = "⭐",
-                                label = "تفضيل",
-                                modifier = Modifier.weight(1f),
-                                onClick = { onNavigate(Screen.Lobby(GameMode.TAFDHIL)) }
-                            )
-                        }
-                    }
-                }
-
-                // Quick-access bottom bar
+                // Image-based navigation buttons
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        QuickNavButton("🏆", "البطولات",  { onNavigate(Screen.Auth) }, Modifier.weight(1f))
-                        QuickNavButton("📊", "الترتيب",   { onNavigate(Screen.Auth) }, Modifier.weight(1f))
-                        QuickNavButton("🎁", "المكافأة",   { onNavigate(Screen.Auth) }, Modifier.weight(1f))
-                        QuickNavButton("🛒", "المتجر",    { onNavigate(Screen.Auth) }, Modifier.weight(1f))
+                    NavImageButton(Res.drawable.btn_play_online,  "Play Online")       { onNavigate(Screen.Auth) }
+                    NavImageButton(Res.drawable.btn_play_friends, "Play with Friends") { onNavigate(Screen.Lobby(GameMode.NORMAL)) }
+
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NavImageButton(Res.drawable.btn_tournament, "Tournament", Modifier.weight(1f)) { onNavigate(Screen.Auth) }
+                        NavImageButton(Res.drawable.btn_ranking,    "Ranking",    Modifier.weight(1f)) { onNavigate(Screen.Auth) }
                     }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NavImageButton(Res.drawable.btn_shop,       "Shop",       Modifier.weight(1f)) { onNavigate(Screen.Auth) }
+                        NavImageButton(Res.drawable.btn_daily_gift, "Daily Gift", Modifier.weight(1f)) { onNavigate(Screen.Auth) }
+                    }
+
+                    NavImageButton(Res.drawable.btn_settings, "Settings") { onNavigate(Screen.Rules) }
+
+                    // Footer
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically,
@@ -144,26 +113,26 @@ fun HomeScreen(onNavigate: (Screen) -> Unit) {
 }
 
 @Composable
-private fun SmallModeButton(
-    emoji: String,
-    label: String,
+private fun NavImageButton(
+    res: DrawableResource,
+    contentDesc: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(54.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.White.copy(0.05f),
-            contentColor = RamiColors.TextLight
-        ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.1f))
+    OutlinedButton(
+        onClick        = onClick,
+        modifier       = modifier.fillMaxWidth().height(56.dp),
+        shape          = RoundedCornerShape(14.dp),
+        border         = null,
+        colors         = ButtonDefaults.outlinedButtonColors(containerColor = Color.Transparent),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(emoji, fontSize = 18.sp)
-            Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-        }
+        Image(
+            painter            = painterResource(res),
+            contentDescription = contentDesc,
+            modifier           = Modifier.fillMaxSize(),
+            contentScale       = ContentScale.FillBounds
+        )
     }
 }
 
@@ -186,51 +155,17 @@ private fun LogoHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.graphicsLayer { translationY = floatAnim }
     ) {
-        // Decorative Fan
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.height(80.dp)) {
-            listOf(-25f, -12f, 0f, 12f, 25f).forEachIndexed { i, rot ->
-                Surface(
-                    color = Color.White,
-                    shape = RoundedCornerShape(4.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Black.copy(0.1f)),
-                    modifier = Modifier
-                        .size(40.dp, 60.dp)
-                        .graphicsLayer { 
-                            rotationZ = rot
-                            transformOrigin = TransformOrigin(0.5f, 1f)
-                            alpha = 0.6f + (i * 0.1f)
-                        }
-                        .shadow(4.dp)
-                ) {}
-            }
-            Text("🃏", fontSize = 40.sp, modifier = Modifier.offset(y = (-10).dp))
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(
-            text = "RAMI",
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Black,
-            color = Color.White,
-            letterSpacing = 8.sp,
-            modifier = Modifier.alpha(0.9f)
+        Image(
+            painter            = painterResource(Res.drawable.cards_fan),
+            contentDescription = null,
+            modifier           = Modifier.size(220.dp, 110.dp),
+            contentScale       = ContentScale.Fit
         )
-        Text(
-            text = "TUNISIEN",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Light,
-            color = RamiColors.Gold,
-            letterSpacing = 4.sp
-        )
-        
-        Spacer(Modifier.height(8.dp))
-        
-        Box(
-            modifier = Modifier
-                .width(40.dp)
-                .height(3.dp)
-                .background(RamiColors.Gold, RoundedCornerShape(2.dp))
+        Image(
+            painter            = painterResource(Res.drawable.logo_main),
+            contentDescription = "Rami Tunisien",
+            modifier           = Modifier.size(220.dp, 140.dp).offset(y = (-14).dp),
+            contentScale       = ContentScale.Fit
         )
     }
 }
@@ -310,59 +245,4 @@ private fun FloatingSuits() {
     }
 }
 
-// ── Quick nav button (icon + label for the bottom bar grid) ──────────────────
-
-@Composable
-private fun QuickNavButton(emoji: String, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    OutlinedButton(
-        onClick  = onClick,
-        modifier = modifier.height(52.dp),
-        shape    = RoundedCornerShape(14.dp),
-        border   = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.08f)),
-        colors   = ButtonDefaults.outlinedButtonColors(contentColor = RamiColors.TextLight)
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(emoji, fontSize = 15.sp)
-            Text(label, fontSize = 9.sp, color = RamiColors.TextLight.copy(0.55f))
-        }
-    }
-}
-
-// ── Mode button ───────────────────────────────────────────────────────────────
-
-@Composable
-private fun ModeButton(
-    emoji: String,
-    arabic: String,
-    english: String,
-    onClick: () -> Unit,
-    highlight: Boolean = false
-) {
-    Button(
-        onClick   = onClick,
-        modifier  = Modifier.fillMaxWidth().height(60.dp),
-        shape     = RoundedCornerShape(18.dp),
-        colors    = ButtonDefaults.buttonColors(
-            containerColor = if (highlight) RamiColors.Gold else RamiColors.Gold.copy(alpha = 0.12f),
-            contentColor   = if (highlight) RamiColors.DarkGreen else RamiColors.TextLight
-        ),
-        border    = if (!highlight) androidx.compose.foundation.BorderStroke(
-            1.dp, RamiColors.Gold.copy(alpha = 0.35f)
-        ) else null,
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = if (highlight) 8.dp else 2.dp)
-    ) {
-        Row(
-            verticalAlignment     = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(emoji, fontSize = 22.sp)
-            Column {
-                Text(arabic,  fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Text(english, fontSize = 10.sp,
-                    color = if (highlight) RamiColors.DarkGreen.copy(alpha = 0.7f)
-                            else RamiColors.TextLight.copy(alpha = 0.55f))
-            }
-        }
-    }
-}
 
